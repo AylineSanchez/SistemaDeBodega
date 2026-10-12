@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class RecepcionDetalleResponse {
-    
+
     private Long id;
     private Long articuloId;
     private String sku;
@@ -17,26 +17,31 @@ public class RecepcionDetalleResponse {
     private String categoriaNombre;
     private String categoriaColor;
     private String unidadMedidaBase;
-    
+
     private Integer cantidadRecibida;
     private Integer cantidadPendiente;
     private BigDecimal valorUnitario;
     private BigDecimal montoTotal;
-    
+
     private String numeroLote;
     private LocalDate fechaVencimiento;
     private String registroIsp;
-    
+
     private String ubicacionFisica;
     private String estante;
     private String nivel;
-    
+
+    // ⚡ Código QR generado + bodega asociada (se llenan al confirmar)
+    private String codigoQr;
+    private String bodegaCodigo;
+    private String bodegaNombre;
+
     private String estado;
     private String observaciones;
-    
+
     public static RecepcionDetalleResponse from(RecepcionDetalle d) {
         return RecepcionDetalleResponse.builder()
-                .id(d.getId())
+                .id(d.getId())                                  // ⚡ CRÍTICO para mapear QR
                 .articuloId(d.getArticulo().getId())
                 .sku(d.getSku())
                 .nombreProducto(d.getNombreProducto())

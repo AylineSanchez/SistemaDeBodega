@@ -7,13 +7,13 @@
     <link rel="icon" href="data:,">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        
+
         body {
             background: #f0ece4;
             padding: 30px;
             color: #2c3e50;
         }
-        
+
         .print-header {
             background: white;
             border-radius: 12px;
@@ -24,10 +24,10 @@
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        
+
         .print-header h1 { font-size: 1.3em; }
         .print-header .actions { display: flex; gap: 10px; }
-        
+
         .btn {
             padding: 10px 20px;
             border: none;
@@ -40,23 +40,24 @@
             align-items: center;
             gap: 6px;
         }
-        
+
         .btn-primary {
             background: linear-gradient(135deg, #e67e22, #d35400);
             color: white;
         }
-        
+
         .btn-secondary {
             background: #ecf0f1;
             color: #2c3e50;
         }
-        
+
+        /* ---------- Grid de QRs ---------- */
         .qr-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
         }
-        
+
         .qr-card {
             background: white;
             border-radius: 12px;
@@ -67,39 +68,41 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
+            border: 2px dashed #e0d9ce;
         }
-        
+
         .qr-card .qr-img {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
-        
+
         .qr-card .qr-img img {
             width: 200px;
             height: 200px;
             display: block;
         }
-        
+
         .qr-card .qr-bodega {
             font-size: 1em;
             font-weight: 700;
             color: #d35400;
             margin-bottom: 5px;
         }
-        
+
         .qr-card .qr-articulo {
             font-size: 0.95em;
-            font-weight: 600;
+            font-weight: 700;
             color: #2c3e50;
             margin-bottom: 8px;
+            line-height: 1.3;
         }
-        
+
         .qr-card .qr-sku {
             font-family: 'Courier New', monospace;
             font-size: 0.85em;
             color: #7f8c8d;
             margin-bottom: 5px;
         }
-        
+
         .qr-card .qr-code {
             font-family: 'Courier New', monospace;
             font-size: 0.75em;
@@ -107,28 +110,52 @@
             margin-bottom: 8px;
             word-break: break-all;
         }
-        
-        .qr-card .qr-stock {
-            font-size: 0.85em;
-            color: #555;
+
+        .qr-card .qr-lote {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: #c0392b;
+            margin: 6px 0;
+            padding: 4px 10px;
+            background: #fef2f2;
+            border-radius: 6px;
+            display: inline-block;
         }
-        
+
+        .qr-card .qr-vencimiento {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .qr-card .qr-stock {
+            font-size: 0.9em;
+            color: #2c3e50;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .qr-card .qr-stock small {
+            font-weight: 400;
+            color: #7f8c8d;
+        }
+
         /* Reglas de impresión */
         @media print {
             body {
                 background: white;
                 padding: 0;
             }
-            
+
             .print-header {
                 display: none;
             }
-            
+
             .qr-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 15px;
             }
-            
+
             .qr-card {
                 box-shadow: none;
                 border: 1px solid #ddd;
@@ -164,18 +191,20 @@ if (!datos) {
     `;
 } else {
     document.title = `QRs - ${datos.nombreArticulo}`;
-    
+
     document.getElementById('qrGrid').innerHTML = datos.qrs.map(qr => `
         <div class="qr-card">
             <div class="qr-img">
-                <img src="${qr.qrImageUrl}?token=${encodeURIComponent(token)}" 
+                <img src="${qr.qrImageUrl}?token=${encodeURIComponent(token)}"
                      alt="QR ${qr.codigoQr}">
             </div>
-            <div class="qr-bodega">${qr.bodegaCodigo} — ${qr.bodegaNombre}</div>
+            <div class="qr-bodega">${escapeHtml(qr.bodegaCodigo)} — ${escapeHtml(qr.bodegaNombre)}</div>
             <div class="qr-articulo">${escapeHtml(qr.nombreArticulo)}</div>
-            <div class="qr-sku">SKU: ${qr.sku}</div>
-            <div class="qr-code">${qr.codigoQr}</div>
-            <div class="qr-stock">Stock: ${qr.stockActual} ${qr.unidadMedida}</div>
+            <div class="qr-sku">SKU: ${escapeHtml(qr.sku)}</div>
+            <div class="qr-code">${escapeHtml(qr.codigoQr)}</div>
+            ${qr.numeroLote ? `<div class="qr-lote">LOTE: ${escapeHtml(qr.numeroLote)}</div>` : ''}
+            ${qr.fechaVencimiento ? `<div class="qr-vencimiento">Vence: ${formatFecha(qr.fechaVencimiento)}</div>` : ''}
+            <div class="qr-stock">${qr.stockActual} <small>${escapeHtml(qr.unidadMedida || '')}</small></div>
         </div>
     `).join('');
 }
@@ -185,7 +214,18 @@ function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function formatFecha(fechaStr) {
+    if (!fechaStr) return '';
+    const fecha = new Date(fechaStr.length === 10 ? fechaStr + 'T00:00:00' : fechaStr);
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const anio = fecha.getFullYear();
+    return `${dia}/${mes}/${anio}`;
 }
 </script>
 

@@ -28,31 +28,35 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ArticuloService {
-    
+
     private final ArticuloRepository articuloRepo;
     private final CategoriaRepository categoriaRepo;
     private final BodegaRepository bodegaRepo;
     private final StockPorBodegaRepository stockRepo;
-    
+
     // ============================================================
     // LISTAR CON PAGINACIÓN Y FILTROS
+    // ⚡ Ahora acepta filtro por bodega (se envía al backend)
     // ============================================================
     @Transactional(readOnly = true)
     public PageResponse<ArticuloResponse> listar(
-            String q, Integer categoriaId, Boolean incluirInactivos,
+            String q, Integer categoriaId, Integer bodegaId,
+            Boolean incluirInactivos,
             int page, int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("nombreTecnico").ascending());
+
         Page<Articulo> pagina = articuloRepo.buscar(
                 q != null ? q.trim() : "",
                 categoriaId,
+                bodegaId,
                 incluirInactivos != null && incluirInactivos,
                 pageable);
-        
+
         List<ArticuloResponse> responses = pagina.getContent().stream()
                 .map(this::toResponse)
                 .toList();
-        
+
         return PageResponse.<ArticuloResponse>builder()
                 .content(responses)
                 .page(pagina.getNumber())
@@ -63,7 +67,7 @@ public class ArticuloService {
                 .last(pagina.isLast())
                 .build();
     }
-    
+
     // ============================================================
     // OBTENER POR ID
     // ============================================================
@@ -73,7 +77,7 @@ public class ArticuloService {
                 .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado: " + id));
         return toResponse(a);
     }
-    
+
     // ============================================================
     // OBTENER POR SKU
     // ============================================================
@@ -83,33 +87,29 @@ public class ArticuloService {
                 .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado: " + sku));
         return toResponse(a);
     }
-    
+
     // ============================================================
     // CREAR
     // ============================================================
     @Transactional
     public ArticuloResponse crear(ArticuloRequest req, String rutUsuario) {
-        
-        // Validar categoría
+
         Categoria categoria = categoriaRepo.findById(req.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Categoría no encontrada: " + req.getCategoriaId()));
-        
-        // Generar SKU si no viene
+
         String sku = (req.getSku() != null && !req.getSku().isBlank())
                 ? req.getSku().trim().toUpperCase()
                 : generarSku(categoria.getCodigo());
-        
-        // Validar SKU único
+
         if (articuloRepo.existsBySku(sku)) {
             throw new BusinessException("Ya existe un artículo con SKU: " + sku);
         }
-        
-        // Aplicar reglas de negocio según categoría
+
         boolean requiereLote = determinarRequiereLote(categoria, req);
         boolean requiereVenc = determinarRequiereVencimiento(categoria, req);
         boolean esDM = determinarEsDispositivoMedico(categoria, req);
-        
+
         Articulo articulo = Articulo.builder()
                 .sku(sku)
                 .nombreTecnico(req.getNombreTecnico().trim())
@@ -143,17 +143,15 @@ public class ArticuloService {
                 .creadoPor(rutUsuario)
                 .actualizadoPor(rutUsuario)
                 .build();
-        
-        // ⚠️ NO inicializar `stocks` manualmente, dejar que JPA lo maneje
+
         articulo = articuloRepo.save(articulo);
         log.info("Artículo creado: {} ({}) por {}", sku, articulo.getNombreTecnico(), rutUsuario);
-        
-        // Crear stock inicial si se especificó bodega
+
         if (req.getBodegaId() != null) {
             Bodega bodega = bodegaRepo.findById(req.getBodegaId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Bodega no encontrada: " + req.getBodegaId()));
-            
+
             StockPorBodega stock = StockPorBodega.builder()
                     .articulo(articulo)
                     .bodega(bodega)
@@ -162,33 +160,31 @@ public class ArticuloService {
                     .creadoPor(rutUsuario)
                     .actualizadoPor(rutUsuario)
                     .build();
-            
+
             stockRepo.save(stock);
-            log.info("Stock inicial creado: {} unidades en {}", 
+            log.info("Stock inicial creado: {} unidades en {}",
                      stock.getStockActual(), bodega.getNombre());
         }
-        
-        // ⚠️ Recargar desde la BD (fresh) y luego mapear
-        // No usar el mismo objeto `articulo` que ya fue guardado
+
         Articulo fresco = articuloRepo.findById(articulo.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Error al recargar el artículo"));
-        
+
         return toResponse(fresco);
     }
-    
+
     // ============================================================
     // ACTUALIZAR
     // ============================================================
     @Transactional
     public ArticuloResponse actualizar(Long id, ArticuloRequest req, String rutUsuario) {
-        
+
         Articulo articulo = articuloRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado: " + id));
-        
+
         Categoria categoria = categoriaRepo.findById(req.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Categoría no encontrada: " + req.getCategoriaId()));
-        
+
         if (req.getSku() != null && !req.getSku().isBlank()
                 && !req.getSku().equals(articulo.getSku())) {
             String nuevoSku = req.getSku().trim().toUpperCase();
@@ -197,7 +193,7 @@ public class ArticuloService {
             }
             articulo.setSku(nuevoSku);
         }
-        
+
         articulo.setNombreTecnico(req.getNombreTecnico().trim());
         articulo.setPresentacion(req.getPresentacion());
         articulo.setConcentracion(req.getConcentracion());
@@ -225,17 +221,16 @@ public class ArticuloService {
         articulo.setPrecioPromedioPonderado(req.getPrecioPromedioPonderado());
         articulo.setObservaciones(req.getObservaciones());
         articulo.setActualizadoPor(rutUsuario);
-        
+
         articulo = articuloRepo.save(articulo);
         log.info("Artículo actualizado: {} por {}", articulo.getSku(), rutUsuario);
-        
-        // Recargar para evitar problemas de lazy loading
+
         Articulo fresco = articuloRepo.findById(articulo.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Error al recargar el artículo"));
-        
+
         return toResponse(fresco);
     }
-    
+
     // ============================================================
     // BAJA LÓGICA
     // ============================================================
@@ -243,14 +238,14 @@ public class ArticuloService {
     public void desactivar(Long id, String rutUsuario) {
         Articulo articulo = articuloRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado: " + id));
-        
+
         articulo.setActivo(false);
         articulo.setActualizadoPor(rutUsuario);
         articuloRepo.save(articulo);
-        
+
         log.info("Artículo desactivado: {} por {}", articulo.getSku(), rutUsuario);
     }
-    
+
     // ============================================================
     // REACTIVAR
     // ============================================================
@@ -258,62 +253,56 @@ public class ArticuloService {
     public void reactivar(Long id, String rutUsuario) {
         Articulo articulo = articuloRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado: " + id));
-        
+
         articulo.setActivo(true);
         articulo.setActualizadoPor(rutUsuario);
         articuloRepo.save(articulo);
-        
+
         log.info("Artículo reactivado: {} por {}", articulo.getSku(), rutUsuario);
     }
-    
+
     // ============================================================
     // HELPERS
     // ============================================================
-    
-    /**
-     * ⚠️ CORREGIDO: NO modifica el artículo, solo lee los stocks 
-     * desde el repositorio y los pasa al DTO.
-     */
+
     private ArticuloResponse toResponse(Articulo a) {
-        // Cargar stocks activos desde el repositorio (sin tocar la entidad)
         List<StockPorBodega> stocks = stockRepo.findByArticuloIdAndActivoTrue(a.getId());
-        
+
         Integer stockTotal = stocks.stream()
                 .mapToInt(StockPorBodega::getStockActual)
                 .sum();
-        
-        // Pasar los stocks al DTO sin mutar el artículo
+
         return ArticuloResponse.from(a, stocks, stockTotal);
     }
-    
+
     private String generarSku(String categoriaCodigo) {
         String prefijo = "GEN-" + categoriaCodigo + "-";
         long count = articuloRepo.count() + 1;
-        String candidato = prefijo + String.format("%04d", count);
-        
+        String candidato = prefijo + String.format("%05d", count);
+
         while (articuloRepo.existsBySku(candidato)) {
             count++;
-            candidato = prefijo + String.format("%04d", count);
+            candidato = prefijo + String.format("%05d", count);
         }
-        
+
         return candidato;
     }
-    
+
     private boolean determinarRequiereLote(Categoria cat, ArticuloRequest req) {
         if (req.getRequiereLote() != null) return req.getRequiereLote();
         String cod = cat.getCodigo();
-        return "MEDICOS".equals(cod) || "DENTAL".equals(cod);
+        return "MEDICOS".equals(cod) || "DENTAL".equals(cod) || "IMPL-DENTAL".equals(cod);
     }
-    
+
     private boolean determinarRequiereVencimiento(Categoria cat, ArticuloRequest req) {
         if (req.getRequiereVencimiento() != null) return req.getRequiereVencimiento();
         String cod = cat.getCodigo();
-        return "MEDICOS".equals(cod) || "DENTAL".equals(cod);
+        return "MEDICOS".equals(cod) || "DENTAL".equals(cod) || "IMPL-DENTAL".equals(cod);
     }
-    
+
     private boolean determinarEsDispositivoMedico(Categoria cat, ArticuloRequest req) {
         if (req.getEsDispositivoMedico() != null) return req.getEsDispositivoMedico();
         String cod = cat.getCodigo();
-        return "MEDICOS".equals(cod) || "DENTAL".equals(cod);
+        return "MEDICOS".equals(cod) || "DENTAL".equals(cod) || "IMPL-DENTAL".equals(cod);
     }
 }

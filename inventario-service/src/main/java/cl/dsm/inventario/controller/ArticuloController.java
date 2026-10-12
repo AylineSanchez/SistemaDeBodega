@@ -20,27 +20,29 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class ArticuloController {
-    
+
     private final ArticuloService articuloService;
     private final StockBodegaService stockService;
-    
+
     // ============================================================
     // LISTAR - Todos los roles autenticados
+    // ⚡ Ahora acepta filtro por bodega
     // ============================================================
     @GetMapping
     @PreAuthorize("hasAnyRole('JEFATURA', 'OPERATIVO', 'AUDITOR', 'ENCARGADO_DEPENDENCIA')")
     public ResponseEntity<ApiResponse<PageResponse<ArticuloResponse>>> listar(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Integer categoriaId,
+            @RequestParam(required = false) Integer bodegaId,
             @RequestParam(required = false, defaultValue = "false") Boolean incluirInactivos,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         return ResponseEntity.ok(ApiResponse.ok(
-                articuloService.listar(q, categoriaId, incluirInactivos, page, size)
+                articuloService.listar(q, categoriaId, bodegaId, incluirInactivos, page, size)
         ));
     }
-    
+
     // ============================================================
     // OBTENER POR ID - Todos los roles
     // ============================================================
@@ -49,7 +51,7 @@ public class ArticuloController {
     public ResponseEntity<ApiResponse<ArticuloResponse>> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(articuloService.obtenerPorId(id)));
     }
-    
+
     // ============================================================
     // OBTENER POR SKU - Todos los roles
     // ============================================================
@@ -58,7 +60,7 @@ public class ArticuloController {
     public ResponseEntity<ApiResponse<ArticuloResponse>> obtenerPorSku(@PathVariable String sku) {
         return ResponseEntity.ok(ApiResponse.ok(articuloService.obtenerPorSku(sku)));
     }
-    
+
     // ============================================================
     // CREAR - Solo JEFATURA y OPERATIVO
     // ============================================================
@@ -67,14 +69,14 @@ public class ArticuloController {
     public ResponseEntity<ApiResponse<ArticuloResponse>> crear(
             @Valid @RequestBody ArticuloRequest req,
             Authentication auth) {
-        
+
         String rutUsuario = auth != null ? auth.getName() : "SYSTEM";
         ArticuloResponse creado = articuloService.crear(req, rutUsuario);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Artículo creado exitosamente", creado));
     }
-    
+
     // ============================================================
     // ACTUALIZAR - Solo JEFATURA y OPERATIVO
     // ============================================================
@@ -84,13 +86,13 @@ public class ArticuloController {
             @PathVariable Long id,
             @Valid @RequestBody ArticuloRequest req,
             Authentication auth) {
-        
+
         String rutUsuario = auth != null ? auth.getName() : "SYSTEM";
         ArticuloResponse actualizado = articuloService.actualizar(id, req, rutUsuario);
-        
+
         return ResponseEntity.ok(ApiResponse.ok("Artículo actualizado exitosamente", actualizado));
     }
-    
+
     // ============================================================
     // DESACTIVAR - Solo JEFATURA y OPERATIVO
     // ============================================================
@@ -99,13 +101,13 @@ public class ArticuloController {
     public ResponseEntity<ApiResponse<Void>> desactivar(
             @PathVariable Long id,
             Authentication auth) {
-        
+
         String rutUsuario = auth != null ? auth.getName() : "SYSTEM";
         articuloService.desactivar(id, rutUsuario);
-        
+
         return ResponseEntity.ok(ApiResponse.ok("Artículo desactivado exitosamente", null));
     }
-    
+
     // ============================================================
     // REACTIVAR - Solo JEFATURA y OPERATIVO
     // ============================================================
@@ -114,13 +116,13 @@ public class ArticuloController {
     public ResponseEntity<ApiResponse<Void>> reactivar(
             @PathVariable Long id,
             Authentication auth) {
-        
+
         String rutUsuario = auth != null ? auth.getName() : "SYSTEM";
         articuloService.reactivar(id, rutUsuario);
-        
+
         return ResponseEntity.ok(ApiResponse.ok("Artículo reactivado exitosamente", null));
     }
-    
+
     // ============================================================
     // LISTAR STOCKS - Todos los roles
     // ============================================================
@@ -130,7 +132,7 @@ public class ArticuloController {
             @PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(stockService.listarPorArticulo(id)));
     }
-    
+
     // ============================================================
     // AGREGAR A BODEGA - Solo JEFATURA y OPERATIVO
     // ============================================================
@@ -140,14 +142,14 @@ public class ArticuloController {
             @PathVariable Long id,
             @Valid @RequestBody StockBodegaRequest req,
             Authentication auth) {
-        
+
         String rutUsuario = auth != null ? auth.getName() : "SYSTEM";
         ArticuloResponse.StockBodegaDTO stock = stockService.agregarABodega(id, req, rutUsuario);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Artículo agregado a la bodega", stock));
     }
-    
+
     // ============================================================
     // ACTUALIZAR STOCK - Solo JEFATURA y OPERATIVO
     // ============================================================
@@ -158,14 +160,14 @@ public class ArticuloController {
             @PathVariable Integer bodegaId,
             @Valid @RequestBody StockBodegaRequest req,
             Authentication auth) {
-        
+
         String rutUsuario = auth != null ? auth.getName() : "SYSTEM";
         ArticuloResponse.StockBodegaDTO stock = stockService.actualizarStock(
                 id, bodegaId, req, rutUsuario);
-        
+
         return ResponseEntity.ok(ApiResponse.ok("Stock actualizado", stock));
     }
-    
+
     // ============================================================
     // QUITAR DE BODEGA - Solo JEFATURA y OPERATIVO
     // ============================================================
@@ -175,10 +177,10 @@ public class ArticuloController {
             @PathVariable Long id,
             @PathVariable Integer bodegaId,
             Authentication auth) {
-        
+
         String rutUsuario = auth != null ? auth.getName() : "SYSTEM";
         stockService.quitarDeBodega(id, bodegaId, rutUsuario);
-        
+
         return ResponseEntity.ok(ApiResponse.ok("Artículo quitado de la bodega", null));
     }
 }
