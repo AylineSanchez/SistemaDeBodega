@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepción de Mercadería - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/bodega.css">
+    <style>
+        /* ============================================================
+           ESTILOS ESPECÍFICOS DE RECEPCIÓN
+           ============================================================ */
+
+        /* ---------- Formulario ---------- */
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .form-card h3 {
+            color: #2c3e50;
+            font-size: 1.05em;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0ebe0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .form-group label .required {
+            color: #e74c3c;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95em;
+            background-color: #faf9f7;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #e67e22;
+            outline: none;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+        }
+
+        .form-group input:disabled,
+        .form-group textarea:disabled {
+            background-color: #f0ece4;
+            color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* ---------- Tabla de detalles ---------- */
+        .detalles-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+
+        .detalles-table thead {
+            background-color: #f8f5f0;
+        }
+
+        .detalles-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+            color: #2c3e50;
+            border-bottom: 2px solid #e0d9ce;
+            font-size: 0.85em;
+        }
+
+        .detalles-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0ebe0;
+            vertical-align: middle;
+        }
+
+        .detalles-table tbody tr:hover {
+            background-color: #fdfaf6;
+        }
+
+        /* ---------- Botones ---------- */
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.8em;
+            border-radius: 8px;
+        }
+
+        /* ---------- Alertas inline ---------- */
+        .alert-info {
+            background-color: #eaf2f8;
+            border-left: 4px solid #3498db;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #2874a6;
+            margin: 12px 0;
+        }
+
+        .alert-warning {
+            background-color: #fef9e7;
+            border-left: 4px solid #f39c12;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #7d6608;
+            margin: 12px 0;
+        }
+
+        /* ---------- Resumen totales ---------- */
+        .totales-card {
+            background: linear-gradient(135deg, #f8f5f0, #f0ebe0);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .totales-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.95em;
+        }
+
+        .totales-row.total {
+            border-top: 2px solid #d5dbdb;
+            margin-top: 8px;
+            padding-top: 12px;
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #d35400;
+        }
+
+        /* ---------- Estados ---------- */
+        .estado-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .estado-BORRADOR   { background-color: #ecf0f1; color: #7f8c8d; }
+        .estado-CONFIRMADA { background-color: #d5f5e3; color: #1e8449; }
+        .estado-ANULADA    { background-color: #fadbd8; color: #c0392b; }
+        .estado-PARCIAL    { background-color: #fef9e7; color: #b7950b; }
+
+        /* ---------- Modal grande ---------- */
+        .modal-xl {
+            max-width: 900px !important;
+        }
+
+        /* ---------- Buscador de productos ---------- */
+        .producto-search {
+            position: relative;
+        }
+
+        .producto-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .producto-suggestions.active {
+            display: block;
+        }
+
+        .producto-option {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0ebe0;
+            font-size: 0.9em;
+        }
+
+        .producto-option:hover {
+            background-color: #faf9f7;
+        }
+
+        .producto-option .sku {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #d35400;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    
+    <header id="app-header"></header>
+    
+    <div class="main-layout">
+        
+        <nav id="app-sidebar"></nav>
+        
+        <main class="app-main">
+            
+            <!-- Título -->
+            <div class="card-header">
+                <h2 class="page-title">📥 Recepción de Mercadería</h2>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="mostrarHistorial()">
+                        📋 Ver Historial
+                    </button>
+                    <button class="btn btn-primary" onclick="nuevaRecepcion()">
+                        ➕ Nueva Recepción
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ============================================================
+                 FORMULARIO DE RECEPCIÓN
+                 ============================================================ -->
+            <div id="formularioRecepcion">
+                
+                <!-- Datos del documento -->
+                <div class="form-card">
+                    <h3>📄 Datos del Documento</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tipoDocumento">Tipo de Documento <span class="required">*</span></label>
+                            <select id="tipoDocumento" required>
+                                <option value="">Seleccione...</option>
+                                <option value="FACTURA">Factura</option>
+                                <option value="GUIA_DESPACHO">Guía de Despacho</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="numeroDocumento">N° Documento <span class="required">*</span></label>
+                            <input type="text" id="numeroDocumento" placeholder="Ej: F-2026-1234" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="numeroOrdenCompra">N° Orden de Compra</label>
+                            <input type="text" id="numeroOrdenCompra" placeholder="Ej: OC-2026-100">
+                        </div>
+                        <div class="form-group">
+                            <label for="numeroGuiaDespacho">N° Guía de Despacho</label>
+                            <input type="text" id="numeroGuiaDespacho" placeholder="Ej: G-2026-5678">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fechaEmision">Fecha de Emisión <span class="required">*</span></label>
+                            <input type="date" id="fechaEmision" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaRecepcion">Fecha de Recepción <span class="required">*</span></label>
+                            <input type="date" id="fechaRecepcion" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bodegaId">Bodega Destino <span class="required">*</span></label>
+                            <select id="bodegaId" required>
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Datos del proveedor -->
+                <div class="form-card">
+                    <h3>🏢 Datos del Proveedor</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rutProveedor">RUT Proveedor <span class="required">*</span></label>
+                            <input type="text" id="rutProveedor" placeholder="Ej: 76.123.456-7" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nombreProveedor">Nombre Proveedor <span class="required">*</span></label>
+                            <input type="text" id="nombreProveedor" placeholder="Ej: Cenabast S.A." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tipoProveedor">Tipo de Proveedor</label>
+                            <select id="tipoProveedor">
+                                <option value="">Seleccione...</option>
+                                <option value="Cenabast">Cenabast</option>
+                                <option value="Mercado Público">Mercado Público</option>
+                                <option value="Compra Ágil">Compra Ágil</option>
+                                <option value="Licitación Pública">Licitación Pública</option>
+                                <option value="Trato Directo">Trato Directo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="telefonoProveedor">Teléfono</label>
+                            <input type="text" id="telefonoProveedor" placeholder="Ej: +56 2 2345 6789">
+                        </div>
+                        <div class="form-group">
+                            <label for="direccionProveedor">Dirección</label>
+                            <input type="text" id="direccionProveedor" placeholder="Ej: Av. Providencia 1234">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detalle de productos -->
+                <div class="form-card">
+                    <h3>📦 Detalle de Productos</h3>
+                    
+                    <!-- Buscador de productos -->
+                    <div class="form-row">
+                        <div class="form-group producto-search" style="grid-column: span 2;">
+                            <label for="productoSearch">🔍 Buscar Producto por SKU o Nombre</label>
+                            <input type="text" id="productoSearch"
+                                   placeholder="Escriba SKU o nombre del producto..."
+                                   autocomplete="off">
+                            <div class="producto-suggestions" id="productoSuggestions"></div>
+                        </div>
+                        <div class="form-group" style="justify-content: flex-end;">
+                            <button type="button" class="btn btn-primary" onclick="agregarProductoManual()">
+                                ➕ Agregar Manualmente
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla de productos agregados -->
+                    <table class="detalles-table" id="detallesTable">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>N° Lote</th>
+                                <th>Vencimiento</th>
+                                <th>V. Unitario</th>
+                                <th>Total</th>
+                                <th style="text-align:right;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detallesBody">
+                            <tr>
+                                <td colspan="8" style="text-align:center;padding:30px;color:#95a5a6;">
+                                    <div style="font-size:2em;margin-bottom:8px;">📦</div>
+                                    <p>No hay productos agregados</p>
+                                    <p style="font-size:0.85em;">Use el buscador o agregue manualmente</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Totales -->
+                <div class="form-card">
+                    <h3>💰 Totales</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="montoNeto">Monto Neto</label>
+                            <input type="number" id="montoNeto" step="0.01" value="0" onchange="recalcularTotales()">
+                        </div>
+                        <div class="form-group">
+                            <label for="montoIva">IVA (19%)</label>
+                            <input type="number" id="montoIva" step="0.01" value="0" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="montoTotal">Monto Total</label>
+                            <input type="number" id="montoTotal" step="0.01" value="0" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="totales-card">
+                        <div class="totales-row">
+                            <span>Total unidades:</span>
+                            <strong id="totalUnidades">0</strong>
+                        </div>
+                        <div class="totales-row">
+                            <span>Total líneas:</span>
+                            <strong id="totalLineas">0</strong>
+                        </div>
+                        <div class="totales-row">
+                            <span>Suma de líneas:</span>
+                            <strong id="sumaLineas">$0</strong>
+                        </div>
+                        <div class="totales-row total">
+                            <span>MONTO TOTAL:</span>
+                            <strong id="montoTotalDisplay">$0</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Observaciones -->
+                <div class="form-card">
+                    <h3>📝 Observaciones</h3>
+                    <div class="form-group">
+                        <textarea id="observaciones" rows="3"
+                                  placeholder="Observaciones opcionales..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Acciones finales -->
+                <div class="form-card" style="display:flex;justify-content:flex-end;gap:10px;">
+                    <button type="button" class="btn btn-secondary" onclick="cancelarFormulario()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="guardarRecepcion(false)">
+                        💾 Guardar Borrador
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="guardarRecepcion(true)">
+                        ✅ Guardar y Confirmar
+                    </button>
+                </div>
+                
+            </div>
+            
+            <!-- ============================================================
+                 HISTORIAL DE RECEPCIONES
+                 ============================================================ -->
+            <div id="historialRecepciones" style="display:none;">
+                
+                <div class="card">
+                    <div class="search-bar">
+                        <input type="text" id="searchHistorial" class="search-input"
+                               placeholder="🔍 Buscar por N° recepción, documento, proveedor...">
+                        
+                        <select id="estadoFilter" class="filter-select">
+                            <option value="">Todos los estados</option>
+                            <option value="BORRADOR">📝 Borrador</option>
+                            <option value="CONFIRMADA">✅ Confirmada</option>
+                            <option value="ANULADA">❌ Anulada</option>
+                        </select>
+                        
+                        <button class="btn btn-secondary" onclick="limpiarFiltrosHistorial()">
+                            🔄 Limpiar
+                        </button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="product-table">
+                            <thead>
+                                <tr>
+                                    <th>N° Recepción</th>
+                                    <th>Documento</th>
+                                    <th>Proveedor</th>
+                                    <th>Bodega</th>
+                                    <th>Fecha</th>
+                                    <th>Líneas</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                    <th style="text-align:right;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historialBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="pagination">
+                        <span class="pagination-info" id="historialInfo">Cargando...</span>
+                        <div class="pagination-buttons" id="historialPagination"></div>
+                    </div>
+                </div>
+                
+            </div>
+            
+        </main>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Modal: Agregar Producto -->
+    <div class="modal-overlay" id="modalProducto">
+        <div class="modal modal-xl">
+            <h3>Agregar Producto</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="prodSku">SKU <span class="required">*</span></label>
+                    <input type="text" id="prodSku" readonly>
+                </div>
+                <div class="form-group" style="grid-column: span 3;">
+                    <label>Producto</label>
+                    <input type="text" id="prodNombre" readonly>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="prodCantidad">Cantidad Recibida <span class="required">*</span></label>
+                    <input type="number" id="prodCantidad" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="prodValorUnitario">Valor Unitario</label>
+                    <input type="number" id="prodValorUnitario" step="0.01" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="prodMontoTotal">Monto Total</label>
+                    <input type="number" id="prodMontoTotal" step="0.01" value="0" readonly>
+                </div>
+            </div>
+            
+            <div class="alert-info" id="prodAlertLote" style="display:none;">
+                ⚠️ Este producto <strong>requiere lote y vencimiento</strong> por normativa sanitaria.
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="prodLote">N° de Lote</label>
+                    <input type="text" id="prodLote" placeholder="Ej: LOTE-2026-A001">
+                </div>
+                <div class="form-group">
+                    <label for="prodVencimiento">Fecha de Vencimiento</label>
+                    <input type="date" id="prodVencimiento">
+                </div>
+                <div class="form-group">
+                    <label for="prodRegistroIsp">Registro ISP</label>
+                    <input type="text" id="prodRegistroIsp" placeholder="Ej: DM-03865">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="prodUbicacion">Ubicación Física</label>
+                    <input type="text" id="prodUbicacion" placeholder="Ej: Estantería A3, Pasillo 2">
+                </div>
+                <div class="form-group">
+                    <label for="prodEstante">Estante</label>
+                    <input type="text" id="prodEstante" placeholder="Ej: A3">
+                </div>
+                <div class="form-group">
+                    <label for="prodNivel">Nivel</label>
+                    <input type="text" id="prodNivel" placeholder="Ej: 2">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="prodObservaciones">Observaciones</label>
+                <textarea id="prodObservaciones" rows="2"></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModalProducto()">
+                    Cancelar
+                </button>
+                <button class="btn btn-success" onclick="confirmarProducto()">
+                    ✅ Agregar Producto
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal: Ver Detalle -->
+    <div class="modal-overlay" id="modalDetalle">
+        <div class="modal modal-xl">
+            <h3>Detalle de Recepción</h3>
+            <div id="detalleContent"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModalDetalle()">
+                    Cerrar
+                </button>
+                <button class="btn btn-primary" id="btnImprimirDetalle" onclick="imprimirDetalle()">
+                    🖨️ Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Confirmación -->
+    <div class="modal-overlay" id="modalConfirm">
+        <div class="modal">
+            <h3 id="confirmTitle">Confirmar acción</h3>
+            <p id="confirmMessage">¿Está seguro?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarConfirm()">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/session-helper.js"></script>
+<script src="/js/layout.js"></script>
+<script src="/js/recepcion.js"></script>
+</body>
+</html>

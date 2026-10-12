@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/bodega.css">
+</head>
+<body>
+<div class="app-container">
+    
+    <header id="app-header"></header>
+    
+    <div class="main-layout">
+        
+        <nav id="app-sidebar"></nav>
+        
+        <main class="app-main">
+            
+            <div class="card-header">
+                <h2 class="page-title">👥 Gestión de Usuarios</h2>
+                <button class="btn btn-primary" onclick="abrirFormulario()">
+                    ➕ Nuevo Usuario
+                </button>
+            </div>
+            
+            <!-- Barra de filtros -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input"
+                       placeholder="🔍 Buscar por RUT, nombre o email...">
+                
+                <select id="rolFilter" class="filter-select">
+                    <option value="">Todos los roles</option>
+                    <option value="JEFATURA">Jefatura</option>
+                    <option value="OPERATIVO">Operativo</option>
+                    <option value="AUDITOR">Auditor NT 226</option>
+                    <option value="ENCARGADO_DEPENDENCIA">Encargado Dependencia</option>
+                </select>
+                
+                <select id="estadoFilter" class="filter-select">
+                    <option value="">Todos los estados</option>
+                    <option value="ACTIVO">Activos</option>
+                    <option value="INACTIVO">Inactivos</option>
+                    <option value="BLOQUEADO">Bloqueados</option>
+                </select>
+                
+                <button class="btn btn-secondary" onclick="limpiarFiltros()">
+                    🔄 Limpiar
+                </button>
+            </div>
+            
+            <!-- Tabla -->
+            <div class="table-container">
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>RUT</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Dependencia</th>
+                            <th>Estado</th>
+                            <th>Último Acceso</th>
+                            <th style="text-align:right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody"></tbody>
+                </table>
+            </div>
+            
+            <!-- Leyenda de roles -->
+            <div class="roles-legend">
+                <div class="legend-item">
+                    <span class="badge-rol jefatura">JEFATURA</span>
+                    <span class="legend-desc">Control global del sistema</span>
+                </div>
+                <div class="legend-item">
+                    <span class="badge-rol operativo">OPERATIVO</span>
+                    <span class="legend-desc">Operación diaria de bodega</span>
+                </div>
+                <div class="legend-item">
+                    <span class="badge-rol auditor">AUDITOR</span>
+                    <span class="legend-desc">Trazabilidad NT 226</span>
+                </div>
+                <div class="legend-item">
+                    <span class="badge-rol encargado">ENC. DEPENDENCIA</span>
+                    <span class="legend-desc">Solo lectura y pedidos</span>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Modal Formulario -->
+    <div class="modal-overlay" id="modalForm">
+        <div class="modal" style="max-width:600px;">
+            <h3 id="modalFormTitle">Nuevo Usuario</h3>
+            
+            <form id="formUsuario" autocomplete="off">
+                <input type="hidden" id="usuarioId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rut">RUT <span class="required">*</span></label>
+                        <input type="text" id="rut" placeholder="12.345.678-5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="rol">Rol <span class="required">*</span></label>
+                        <select id="rol" required onchange="toggleDependencia()">
+                            <option value="">Seleccione un rol</option>
+                            <option value="JEFATURA">Jefatura</option>
+                            <option value="OPERATIVO">Operativo</option>
+                            <option value="AUDITOR">Auditor NT 226</option>
+                            <option value="ENCARGADO_DEPENDENCIA">Encargado Dependencia</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombreCompleto">Nombre Completo <span class="required">*</span></label>
+                        <input type="text" id="nombreCompleto" placeholder="Nombre y apellidos" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email <span class="required">*</span></label>
+                        <input type="email" id="email" placeholder="usuario@dsm.cl" required>
+                    </div>
+                </div>
+                
+                <div class="form-row" id="dependenciaRow" style="display:none;">
+                    <div class="form-group" style="grid-column:1/-1;">
+                        <label for="dependencia">Dependencia</label>
+                        <select id="dependencia">
+                            <option value="">Seleccione una dependencia</option>
+                            <option value="Farmacia Central">Farmacia Central</option>
+                            <option value="SAR Santa Cruz">SAR Santa Cruz</option>
+                            <option value="Dental CESFAM">Dental CESFAM</option>
+                            <option value="Vacunatorio">Vacunatorio</option>
+                            <option value="Laboratorio">Laboratorio</option>
+                            <option value="Bodega">Bodega</option>
+                        </select>
+                        <div class="field-help">
+                            Solo aplica para el rol Encargado de Dependencia
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarFormulario()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">
+                        💾 Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Confirmación -->
+    <div class="modal-overlay" id="modalConfirm">
+        <div class="modal">
+            <h3 id="confirmTitle">Confirmar acción</h3>
+            <p id="confirmMessage">¿Está seguro?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarConfirm()">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/session-helper.js"></script>
+<script src="/js/layout.js"></script>
+<script src="/js/usuarios.js"></script>
+</body>
+</html>

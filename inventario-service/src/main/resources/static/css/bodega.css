@@ -1,0 +1,529 @@
+/* ============================================================
+   BODEGA - Sistema Bodega DSM Santa Cruz
+   Estilos unificados: Header + Sidebar + Main + Componentes
+   ============================================================ */
+
+/* ---------- Reset ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0ece4;
+    color: #2c3e50;
+    min-height: 100vh;
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   ============================================================ */
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- Header ---------- */
+#app-header {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+#app-header .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#app-header .logo-icon {
+    font-size: 1.8em;
+}
+
+#app-header .system-title {
+    font-weight: 600;
+    font-size: 1.2em;
+    letter-spacing: 0.3px;
+}
+
+#app-header .user-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: rgba(255,255,255,0.15);
+    padding: 8px 18px;
+    border-radius: 30px;
+}
+
+#app-header .user-name {
+    font-weight: 600;
+}
+
+#app-header .user-role {
+    background-color: rgba(255,255,255,0.25);
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+}
+
+#app-header .btn-logout {
+    background-color: transparent;
+    border: 1px solid rgba(255,255,255,0.6);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: 0.3s;
+}
+
+#app-header .btn-logout:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+/* ---------- Layout con Sidebar ---------- */
+.main-layout {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 70px);
+}
+
+/* ---------- Sidebar ---------- */
+#app-sidebar {
+    background-color: #2c3e50;
+    width: 240px;
+    padding: 20px 0;
+    color: white;
+    flex-shrink: 0;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar-menu li {
+    padding: 14px 22px;
+    margin: 4px 10px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 500;
+    font-size: 0.95em;
+    transition: 0.2s;
+    cursor: pointer;
+    user-select: none;
+}
+
+.sidebar-menu li:hover:not(.active) {
+    background-color: #34495e;
+}
+
+.sidebar-menu li.active {
+    background-color: #e67e22;
+    box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);
+}
+
+.sidebar-menu .menu-icon {
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.sidebar-menu .menu-label {
+    flex: 1;
+}
+
+/* ---------- Main Content ---------- */
+.app-main {
+    flex: 1;
+    padding: 30px;
+    background-color: #faf9f7;
+    overflow-x: hidden;
+}
+
+.app-main h2.page-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 25px;
+    font-size: 1.5em;
+}
+
+/* ============================================================
+   COMPONENTES REUTILIZABLES
+   ============================================================ */
+
+/* ---------- Botones ---------- */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white;
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(230, 126, 34, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+.btn-success:hover {
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+}
+.btn-secondary:hover {
+    background-color: #d5dbdb;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* ---------- Cards ---------- */
+.card {
+    background-color: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.card-header h3 {
+    color: #2c3e50;
+    font-size: 1.15em;
+}
+
+/* ---------- Barra de búsqueda ---------- */
+.search-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    background-color: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95em;
+    background-color: #faf9f7;
+    transition: 0.2s;
+}
+
+.search-input:focus {
+    border-color: #e67e22;
+    outline: none;
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+}
+
+.filter-select {
+    padding: 10px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95em;
+    background-color: white;
+    min-width: 180px;
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #e67e22;
+}
+
+/* ---------- Tabla ---------- */
+.table-container {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.product-table thead {
+    background-color: #f8f5f0;
+}
+
+.product-table th {
+    padding: 15px 18px;
+    text-align: left;
+    font-weight: 700;
+    color: #2c3e50;
+    border-bottom: 2px solid #e0d9ce;
+    white-space: nowrap;
+}
+
+.product-table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid #f0ebe0;
+    vertical-align: middle;
+}
+
+.product-table tbody tr {
+    transition: background 0.2s;
+}
+
+.product-table tbody tr:hover {
+    background-color: #fdfaf6;
+}
+
+/* ---------- Loading ---------- */
+.loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(255,255,255,0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(230, 126, 34, 0.2);
+    border-top-color: #e67e22;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 6000;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    background-color: white;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalIn 0.3s ease;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@keyframes modalIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.modal h3 {
+    color: #2c3e50;
+    margin-bottom: 12px;
+}
+
+.modal p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 850px) {
+    .main-layout {
+        flex-direction: column;
+    }
+    
+    #app-sidebar {
+        width: 100%;
+        padding: 10px;
+    }
+    
+    .sidebar-menu {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
+    
+    .sidebar-menu li {
+        padding: 10px 14px;
+        margin: 0;
+        font-size: 0.85em;
+    }
+    
+    .sidebar-menu .menu-label {
+        display: none;
+    }
+    
+    .sidebar-menu .menu-icon {
+        font-size: 1.4em;
+    }
+    
+    .app-main {
+        padding: 15px;
+    }
+    
+    .product-table th,
+    .product-table td {
+        padding: 10px 12px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 550px) {
+    #app-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    #app-header .user-area {
+        font-size: 0.85em;
+    }
+    
+    .search-input,
+    .filter-select {
+        width: 100%;
+    }
+}
+
+/* ============================================================
+   ESTILOS ADICIONALES PARA GESTIÓN DE USUARIOS
+   ============================================================ */
+
+/* ---------- Badges de roles ---------- */
+.badge-rol {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.72em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.badge-rol.jefatura   { background-color: #c0392b; color: white; }
+.badge-rol.operativo  { background-color: #2980b9; color: white; }
+.badge-rol.auditor    { background-color: #8e44ad; color: white; }
+.badge-rol.encargado  { background-color: #16a085; color: white; }
+
+/* ---------- Estados de usuario ---------- */
+.badge-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 700;
+}
+
+.badge-activo      { background-color: #d5f5e3; color: #1e8449; }
+.badge-inactivo    { background-color: #fadbd8; color: #c0392b; }
+.badge-bloqueado   { background-color: #fef9e7; color: #b7950b; }
+
+/* ---------- Botón QR ---------- */
+.btn-icon.qr { color: #8e44ad; }
+
+/* ---------- Leyenda de roles ---------- */
+.roles-legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.roles-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85em;
+    color: #555;
+}
+
+.roles-legend .legend-desc {
+    font-size: 0.85em;
+    color: #95a5a6;
+}

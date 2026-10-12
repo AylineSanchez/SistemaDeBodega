@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/bodega.css">
+    <style>
+        /* ============================================================
+           ESTILOS DE REPORTES
+           ============================================================ */
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .report-card {
+            background: white;
+            padding: 18px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+
+        .report-card.active {
+            border-color: #e67e22;
+            background-color: #fdfaf6;
+        }
+
+        .report-card .report-icon {
+            font-size: 1.8em;
+            flex-shrink: 0;
+        }
+
+        .report-card .report-info {
+            flex: 1;
+        }
+
+        .report-card .report-name {
+            font-weight: 700;
+            font-size: 0.9em;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+
+        .report-card .report-desc {
+            font-size: 0.75em;
+            color: #7f8c8d;
+        }
+
+        /* ---------- Filtros ---------- */
+        .filters-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            font-size: 0.8em;
+            color: #555;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 9px 13px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9em;
+            background-color: #faf9f7;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #e67e22;
+            background: white;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        /* ---------- Preview ---------- */
+        .report-preview {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .report-preview .report-header-preview {
+            border-bottom: 2px solid #f0ebe0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .report-preview h4 {
+            color: #2c3e50;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .report-preview .report-meta {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .report-preview .report-resumen {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f5f0, #f0ebe0);
+            border-radius: 8px;
+        }
+
+        .report-preview .resumen-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .report-preview .resumen-label {
+            font-size: 0.75em;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .report-preview .resumen-valor {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #d35400;
+        }
+
+        /* ---------- Tabla del reporte ---------- */
+        .report-table-wrap {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 1px solid #f0ebe0;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+
+        .report-table thead {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: white;
+        }
+
+        .report-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .report-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f0ebe0;
+            white-space: nowrap;
+        }
+
+        .report-table tbody tr:hover {
+            background-color: #fdfaf6;
+        }
+
+        .report-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ---------- Estado badges ---------- */
+        .badge-estado {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 700;
+        }
+
+        .badge-estado.QUIEBRE  { background: #fdedec; color: #c0392b; }
+        .badge-estado.CRITICO  { background: #fef9e7; color: #b7950b; }
+        .badge-estado.BAJO     { background: #fef9e7; color: #b7950b; }
+        .badge-estado.NORMAL   { background: #d5f5e3; color: #1e8449; }
+        .badge-estado.VENCIDO  { background: #2c3e50; color: white; }
+        .badge-estado.PROXIMO  { background: #fef9e7; color: #b7950b; }
+        .badge-estado.VIGILAR  { background: #eaf2f8; color: #2874a6; }
+        .badge-estado.OK       { background: #d5f5e3; color: #1e8449; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    
+    <header id="app-header"></header>
+    
+    <div class="main-layout">
+        
+        <nav id="app-sidebar"></nav>
+        
+        <main class="app-main">
+            
+            <div class="card-header">
+                <h2 class="page-title">📊 Reportes y Auditoría</h2>
+            </div>
+            
+            <!-- ============================================================
+                 SELECTOR DE REPORTES
+                 ============================================================ -->
+            <h3 style="margin-bottom:15px;color:#2c3e50;font-size:1.05em;">
+                Seleccione el tipo de reporte
+            </h3>
+            
+            <div class="report-grid" id="reportGrid">
+                <div class="report-card" data-tipo="STOCK_CRITICO" onclick="seleccionarReporte('STOCK_CRITICO', this)">
+                    <span class="report-icon">📋</span>
+                    <div class="report-info">
+                        <div class="report-name">Stock Crítico</div>
+                        <div class="report-desc">Artículos bajo el mínimo</div>
+                    </div>
+                </div>
+                
+                <div class="report-card" data-tipo="VENCIMIENTOS" onclick="seleccionarReporte('VENCIMIENTOS', this)">
+                    <span class="report-icon">⏰</span>
+                    <div class="report-info">
+                        <div class="report-name">Vencimientos</div>
+                        <div class="report-desc">Lotes por vencer (FEFO)</div>
+                    </div>
+                </div>
+                
+                <div class="report-card" data-tipo="MERMAS_BAJAS" onclick="seleccionarReporte('MERMAS_BAJAS', this)">
+                    <span class="report-icon">📉</span>
+                    <div class="report-info">
+                        <div class="report-name">Mermas y Bajas</div>
+                        <div class="report-desc">Productos dados de baja</div>
+                    </div>
+                </div>
+                
+                <div class="report-card" data-tipo="CONSUMO_CENTRO_COSTO" onclick="seleccionarReporte('CONSUMO_CENTRO_COSTO', this)">
+                    <span class="report-icon">📦</span>
+                    <div class="report-info">
+                        <div class="report-name">Consumo por Centro</div>
+                        <div class="report-desc">Entregas por servicio</div>
+                    </div>
+                </div>
+                
+                <div class="report-card" data-tipo="KARDEX" onclick="seleccionarReporte('KARDEX', this)">
+                    <span class="report-icon">📄</span>
+                    <div class="report-info">
+                        <div class="report-name">Kardex</div>
+                        <div class="report-desc">Historial de movimientos</div>
+                    </div>
+                </div>
+                
+                <div class="report-card" data-tipo="LOG_AUDITORIA" onclick="seleccionarReporte('LOG_AUDITORIA', this)">
+                    <span class="report-icon">🔍</span>
+                    <div class="report-info">
+                        <div class="report-name">Log de Auditoría</div>
+                        <div class="report-desc">Audit Trail inalterable</div>
+                    </div>
+                </div>
+                
+                <div class="report-card" data-tipo="VALORIZACION" onclick="seleccionarReporte('VALORIZACION', this)">
+                    <span class="report-icon">💰</span>
+                    <div class="report-info">
+                        <div class="report-name">Valorización</div>
+                        <div class="report-desc">Valor del inventario (PPP)</div>
+                    </div>
+                </div>
+                
+                <div class="report-card" data-tipo="CUMPLIMIENTO_OC" onclick="seleccionarReporte('CUMPLIMIENTO_OC', this)">
+                    <span class="report-icon">📊</span>
+                    <div class="report-info">
+                        <div class="report-name">Cumplimiento OC</div>
+                        <div class="report-desc">Seguimiento de órdenes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ============================================================
+                 FILTROS
+                 ============================================================ -->
+            <div class="filters-card" id="filtersCard" style="display:none;">
+                <h3 style="margin-bottom:15px;color:#2c3e50;font-size:1.05em;">
+                    Filtros del Reporte
+                </h3>
+                
+                <div class="filter-row" id="filtrosFecha">
+                    <div class="filter-group">
+                        <label for="fechaInicio">Fecha Inicio</label>
+                        <input type="date" id="fechaInicio">
+                    </div>
+                    <div class="filter-group">
+                        <label for="fechaFin">Fecha Fin</label>
+                        <input type="date" id="fechaFin">
+                    </div>
+                </div>
+                
+                <div class="filter-row" id="filtrosSelects">
+                    <div class="filter-group" id="filtroBodegaGroup">
+                        <label for="filtroBodega">Bodega</label>
+                        <select id="filtroBodega">
+                            <option value="">Todas las bodegas</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group" id="filtroCategoriaGroup">
+                        <label for="filtroCategoria">Categoría</label>
+                        <select id="filtroCategoria">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group" id="filtroCentroGroup" style="display:none;">
+                        <label for="filtroCentro">Centro de Costo</label>
+                        <select id="filtroCentro">
+                            <option value="">Todos los centros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group" id="filtroTipoMovGroup" style="display:none;">
+                        <label for="filtroTipoMov">Tipo Movimiento</label>
+                        <select id="filtroTipoMov">
+                            <option value="">Todos los movimientos</option>
+                            <option value="INGRESO_RECEPCION">Ingreso Recepción</option>
+                            <option value="EGRESO_DESPACHO">Egreso Despacho</option>
+                            <option value="AJUSTE_POSITIVO">Ajuste Positivo</option>
+                            <option value="AJUSTE_NEGATIVO">Ajuste Negativo</option>
+                            <option value="MERMA_VENCIMIENTO">Merma Vencimiento</option>
+                            <option value="BLOQUEO_ISP">Bloqueo ISP</option>
+                            <option value="DESBLOQUEO_ISP">Desbloqueo ISP</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group" id="filtroBusquedaGroup">
+                        <label for="filtroBusqueda">Búsqueda</label>
+                        <input type="text" id="filtroBusqueda" placeholder="Buscar...">
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button class="btn btn-primary" onclick="generarReporte()">
+                        📊 Generar Reporte
+                    </button>
+                    <button class="btn btn-danger" onclick="exportarExcel()" id="btnExportExcel" disabled>
+                        📥 Exportar Excel
+                    </button>
+                    <button class="btn btn-secondary" onclick="imprimirReporte()" id="btnImprimir" disabled>
+                        🖨️ Imprimir
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ============================================================
+                 PREVIEW DEL REPORTE
+                 ============================================================ -->
+            <div class="report-preview" id="reportPreview" style="display:none;">
+                <div class="report-header-preview">
+                    <h4 id="previewTitulo">Reporte</h4>
+                    <p class="report-meta" id="previewSubtitulo"></p>
+                    <p class="report-meta" id="previewFiltros"></p>
+                    <p class="report-meta" id="previewGenerado"></p>
+                </div>
+                
+                <div class="report-resumen" id="previewResumen"></div>
+                
+                <div class="report-table-wrap">
+                    <table class="report-table" id="previewTable">
+                        <thead id="previewThead"></thead>
+                        <tbody id="previewTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+</div>
+<script src="/js/toast.js"></script>
+<script src="/js/session-helper.js"></script>
+<script src="/js/layout.js"></script>
+<script src="/js/reportes.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres-dsm:
+    image: postgres:16-alpine
+    container_name: dsm_bodega_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dsm_bodega
+      POSTGRES_USER: dsm_admin
+      POSTGRES_PASSWORD: dsm_password_2026
+      TZ: America/Santiago
+    ports:
+      - "5432:5432"
+    volumes:
+      - dsm_postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dsm_admin -d dsm_bodega"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dsm-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dsm_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@dsm.cl
+      PGADMIN_DEFAULT_PASSWORD: admin2026
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-dsm
+    networks:
+      - dsm-network
+
+volumes:
+  dsm_postgres_data:
+    driver: local
+
+networks:
+  dsm-network:
+    driver: bridge

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprimir QRs - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
+        body {
+            background: #f0ece4;
+            padding: 30px;
+            color: #2c3e50;
+        }
+        
+        .print-header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .print-header h1 { font-size: 1.3em; }
+        .print-header .actions { display: flex; gap: 10px; }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .qr-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            page-break-inside: avoid;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .qr-card .qr-img {
+            margin-bottom: 15px;
+        }
+        
+        .qr-card .qr-img img {
+            width: 200px;
+            height: 200px;
+            display: block;
+        }
+        
+        .qr-card .qr-bodega {
+            font-size: 1em;
+            font-weight: 700;
+            color: #d35400;
+            margin-bottom: 5px;
+        }
+        
+        .qr-card .qr-articulo {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .qr-card .qr-sku {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .qr-card .qr-code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75em;
+            color: #8e44ad;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        
+        .qr-card .qr-stock {
+            font-size: 0.85em;
+            color: #555;
+        }
+        
+        /* Reglas de impresión */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .print-header {
+                display: none;
+            }
+            
+            .qr-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .qr-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="print-header">
+    <h1>🔳 Códigos QR para Imprimir</h1>
+    <div class="actions">
+        <button class="btn btn-secondary" onclick="window.close()">Cerrar</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+</div>
+
+<div class="qr-grid" id="qrGrid">
+    <!-- Se llena por JS -->
+</div>
+
+<script>
+const token = localStorage.getItem('token');
+const datos = JSON.parse(sessionStorage.getItem('qrsParaImprimir') || 'null');
+
+if (!datos) {
+    document.getElementById('qrGrid').innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:#95a5a6;">
+            <p style="font-size:3em;">📭</p>
+            <h3>No hay QRs para imprimir</h3>
+            <p style="margin-top:10px;">Cierra esta pestaña y vuelve a intentarlo.</p>
+        </div>
+    `;
+} else {
+    document.title = `QRs - ${datos.nombreArticulo}`;
+    
+    document.getElementById('qrGrid').innerHTML = datos.qrs.map(qr => `
+        <div class="qr-card">
+            <div class="qr-img">
+                <img src="${qr.qrImageUrl}?token=${encodeURIComponent(token)}" 
+                     alt="QR ${qr.codigoQr}">
+            </div>
+            <div class="qr-bodega">${qr.bodegaCodigo} — ${qr.bodegaNombre}</div>
+            <div class="qr-articulo">${escapeHtml(qr.nombreArticulo)}</div>
+            <div class="qr-sku">SKU: ${qr.sku}</div>
+            <div class="qr-code">${qr.codigoQr}</div>
+            <div class="qr-stock">Stock: ${qr.stockActual} ${qr.unidadMedida}</div>
+        </div>
+    `).join('');
+}
+
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+</script>
+
+</body>
+</html>

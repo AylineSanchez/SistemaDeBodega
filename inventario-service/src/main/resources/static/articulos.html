@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maestro de Artículos - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/bodega.css">
+    <link rel="stylesheet" href="/css/bodega.css">
+</head>
+<body>
+<div class="app-container">
+    
+    <!-- Header (se llena por JS) -->
+    <header id="app-header"></header>
+    
+    <div class="main-layout">
+        
+        <!-- Sidebar (se llena por JS) -->
+        <nav id="app-sidebar"></nav>
+        
+        <!-- Contenido -->
+        <main class="app-main">
+            
+            <!-- Título y acciones -->
+            <div class="card-header">
+                <h2 class="page-title">📦 Maestro de Artículos</h2>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-success" onclick="abrirImportador()">
+                        📤 Importar Excel
+                    </button>
+                    <a href="/articulo-form.html" class="btn btn-primary">
+                        ➕ Nuevo Artículo
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Barra de filtros -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input"
+                       placeholder="🔍 Buscar por nombre, SKU...">
+                
+                <select id="categoriaFilter" class="filter-select">
+                    <option value="">Todas las categorías</option>
+                </select>
+                
+                <select id="bodegaFilter" class="filter-select">
+                    <option value="">Todas las bodegas</option>
+                </select>
+                
+                <select id="estadoFilter" class="filter-select">
+                    <option value="">Todos los estados</option>
+                    <option value="QUIEBRE">🔴 Quiebre</option>
+                    <option value="CRITICO">🟠 Crítico</option>
+                    <option value="BAJO">🟡 Bajo</option>
+                    <option value="NORMAL">🟢 Normal</option>
+                </select>
+                
+                <label style="display:flex;align-items:center;gap:6px;font-size:0.9em;color:#555;padding:0 8px;">
+                    <input type="checkbox" id="incluirInactivos"> Ver inactivos
+                </label>
+                
+                <button class="btn btn-secondary" onclick="limpiarFiltros()">
+                    🔄 Limpiar
+                </button>
+            </div>
+            
+            <!-- Tabla -->
+            <div class="table-container">
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Stock / Mín-Máx</th>
+                            <th>Estado</th>
+                            <th>Bodegas</th>
+                            <th style="text-align:right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody"></tbody>
+                </table>
+                
+                <div class="pagination">
+                    <span class="pagination-info" id="paginationInfo">Cargando...</span>
+                    <div class="pagination-buttons" id="paginationButtons"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Modal de importación -->
+    <div class="modal-overlay" id="modalImport">
+        <div class="modal">
+            <h3>📤 Importar artículos desde Excel</h3>
+            <p>
+                Sube el archivo <strong>LISTADOS INSUMOS.xlsx</strong> con los 6 sheets.
+                Se crearán todos los artículos automáticamente.
+                <br><br>
+                <strong>⚠️ Esto puede tardar unos segundos.</strong>
+            </p>
+            <input type="file" id="archivoExcel" accept=".xlsx" 
+                   style="margin-bottom:15px;width:100%;">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarImportador()">Cancelar</button>
+                <button class="btn btn-success" id="btnImportar" onclick="importarExcel()">
+                    📤 Importar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de QRs -->
+    <div class="modal-overlay" id="modalQrs">
+        <div class="modal" style="max-width:700px;">
+            <h3>🔳 Códigos QR del Artículo</h3>
+            <p id="modalQrsDesc">Cada bodega tiene su propio código QR único.</p>
+            <div id="modalQrsContent" style="max-height:400px;overflow-y:auto;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModalQrs()">Cerrar</button>
+                <button class="btn btn-primary" id="btnImprimirQrs" onclick="imprimirQrs()">
+                    🖨️ Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de confirmación -->
+    <div class="modal-overlay" id="modalConfirm">
+        <div class="modal">
+            <h3 id="confirmTitle">Confirmar acción</h3>
+            <p id="confirmMessage">¿Está seguro?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarConfirm()">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/toast.js"></script>
+<script src="/js/session-helper.js"></script>
+<script src="/js/layout.js"></script>
+<script src="/js/articulos.js"></script>
+</body>
+</html>

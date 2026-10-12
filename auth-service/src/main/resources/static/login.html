@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/toast.css">
+</head>
+<body>
+<div class="login-container">
+    <div class="login-card">
+        
+        <div class="login-logos">
+            <div class="logo logo-muni">Muni</div>
+            <div class="logo logo-cesfam">CESFAM</div>
+        </div>
+        
+        <h1 class="login-title">Sistema de Gestión Integral de Bodega</h1>
+        <p class="login-subtitle">Dirección de Salud Municipal - Santa Cruz</p>
+        
+        <form id="formLogin" class="login-form" autocomplete="off" novalidate>
+            
+            <!-- PASO 1: Usuario + Contraseña -->
+            <div id="step1" class="login-step">
+                <div class="form-group-login" id="group-rut">
+                    <label for="rut">Usuario (RUT)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="rut" name="rut"
+                               placeholder="Ej: 123456785"
+                               autocomplete="username"
+                               inputmode="numeric">
+                        <span class="input-status" id="status-rut"></span>
+                    </div>
+                    <div class="field-hint" id="hint-rut"></div>
+                    <div class="field-help">
+                        💡 Solo escriba los números, el sistema agrega los puntos y el guion automáticamente
+                    </div>
+                </div>
+                
+                <div class="form-group-login" id="group-password">
+                    <label for="password">Contraseña</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password"
+                               placeholder="Ingrese su contraseña"
+                               autocomplete="current-password"
+                               maxlength="100">
+                        <button type="button" class="password-toggle" 
+                                onclick="togglePassword()" tabindex="-1"
+                                aria-label="Mostrar/ocultar contraseña">👁️</button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="recordar"> Recordar usuario
+                    </label>
+                    <a href="/forgot-password.html" class="forgot-password">¿Olvidó su contraseña?</a>
+                </div>
+                
+                <button type="submit" class="btn-login-primary" id="btnLogin">
+                    <span class="btn-text">Iniciar Sesión</span>
+                </button>
+            </div>
+            
+            <!-- PASO 2: Código MFA -->
+            <div id="step2" class="login-step" style="display:none;">
+                <div class="mfa-info">
+                    <span class="mfa-icon">🔐</span>
+                    <p id="mfaMessage">Ingrese el código de verificación</p>
+                </div>
+                
+                <div class="form-group-login" id="group-mfa">
+                    <label for="codigoMfa">Código de Verificación</label>
+                    <input type="text" id="codigoMfa" maxlength="6"
+                           placeholder="000000" inputmode="numeric"
+                           pattern="\d{6}" autocomplete="one-time-code">
+                    <div class="mfa-countdown" id="mfaCountdown"></div>
+                </div>
+                
+                <div class="mfa-actions">
+                    <button type="button" class="btn-back" onclick="volverPaso1()">
+                        ← Volver
+                    </button>
+                    <button type="button" class="btn-login-primary" id="btnVerificar"
+                            onclick="verificarMfa()">
+                        <span class="btn-text">Verificar</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        <div class="login-footer">
+            <span>© 2026 Ilustre Municipalidad de Santa Cruz - DSM</span>
+            <span class="version">v1.0</span>
+        </div>
+    </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/login.js"></script>
+</body>
+</html>

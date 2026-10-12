@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Artículo - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/bodega.css">
+</head>
+<body>
+<div class="app-container">
+    <header id="app-header"></header>
+    
+    <div class="main-layout">
+        <nav id="app-sidebar"></nav>
+        
+        <main class="app-main">
+            <div class="card-header">
+                <h2 class="page-title" id="pageTitle">➕ Nuevo Artículo</h2>
+                <a href="/articulos.html" class="btn btn-secondary">← Volver</a>
+            </div>
+            
+            <div class="card">
+                <form id="formArticulo">
+                    <input type="hidden" id="articuloId">
+                    
+                    <h3 style="margin-bottom:15px;color:#2c3e50;">Identificación Básica</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px;">
+                        <div>
+                            <label style="font-weight:600;font-size:0.85em;color:#555;">SKU (auto-generado si se deja vacío)</label>
+                            <input type="text" id="sku" placeholder="Ej: DM-03865"
+                                   style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;font-size:0.85em;color:#555;">Nombre Técnico *</label>
+                            <input type="text" id="nombreTecnico" placeholder="Ej: Jeringa 5cc" required
+                                   style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;font-size:0.85em;color:#555;">Categoría *</label>
+                            <select id="categoriaId" required
+                                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-bottom:15px;color:#2c3e50;">Datos Logísticos</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px;">
+                        <div>
+                            <label style="font-weight:600;font-size:0.85em;color:#555;">Unidad de Medida *</label>
+                            <select id="unidadMedidaBase" required
+                                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                                <option value="UNIDAD">Unidad</option>
+                                <option value="CAJA">Caja</option>
+                                <option value="PAQUETE">Paquete</option>
+                                <option value="BOLSA">Bolsa</option>
+                                <option value="KILO">Kilo</option>
+                                <option value="FRASCO">Frasco</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-weight:600;font-size:0.85em;color:#555;">Stock Mínimo</label>
+                            <input type="number" id="stockMinimo" value="10" min="0"
+                                   style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;font-size:0.85em;color:#555;">Stock Máximo</label>
+                            <input type="number" id="stockMaximo" value="500" min="0"
+                                   style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-bottom:15px;color:#2c3e50;">Control Sanitario</h3>
+                    <div style="display:flex;gap:25px;margin-bottom:25px;flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:8px;font-size:0.9em;">
+                            <input type="checkbox" id="requiereLote"> Requiere lote
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:0.9em;">
+                            <input type="checkbox" id="requiereVencimiento"> Requiere vencimiento
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:0.9em;">
+                            <input type="checkbox" id="esDispositivoMedico"> Es dispositivo médico
+                        </label>
+                    </div>
+                    
+                    <div style="display:flex;gap:10px;justify-content:flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='/articulos.html'">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="btnGuardar">
+                            💾 Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/session-helper.js"></script>
+<script src="/js/layout.js"></script>
+<script src="/js/articulo-form.js"></script>
+</body>
+</html>

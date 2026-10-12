@@ -1,0 +1,489 @@
+/* ============================================================
+   LOGIN - Sistema Bodega DSM
+   ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f0ece4 0%, #e8e0d0 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    color: #2c3e50;
+}
+
+/* ---------- Contenedor principal ---------- */
+.login-container {
+    width: 100%;
+    max-width: 480px;
+}
+
+.login-card {
+    background-color: #ffffff;
+    border-radius: 24px;
+    padding: 45px 40px 30px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+/* ---------- Logotipos ---------- */
+.login-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-weight: 700;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+
+.logo-muni {
+    background: linear-gradient(135deg, #d35400, #e67e22);
+    width: 70px;
+    height: 70px;
+}
+
+.logo-cesfam {
+    background: #2c3e50;
+    width: 60px;
+    height: 60px;
+}
+
+/* ---------- Títulos ---------- */
+.login-title {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    line-height: 1.3;
+}
+
+.login-subtitle {
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin-bottom: 30px;
+}
+
+/* ---------- Formulario ---------- */
+.login-form {
+    text-align: left;
+}
+
+.login-step {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.form-group-login {
+    margin-bottom: 18px;
+    position: relative;
+}
+
+.form-group-login label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85em;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+/* ---------- Input wrapper con icono de estado ---------- */
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-group-login input {
+    width: 100%;
+    padding: 12px 42px 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 0.95em;
+    background-color: #faf9f7;
+    transition: all 0.25s ease;
+    color: #2c3e50;
+}
+
+.form-group-login input:focus {
+    border-color: #e67e22;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+    background-color: #ffffff;
+}
+
+/* Estados de validación */
+.form-group-login.valid input {
+    border-color: #27ae60;
+    background-color: #f0fdf4;
+}
+
+.form-group-login.valid input:focus {
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.12);
+}
+
+.form-group-login.invalid input {
+    border-color: #e74c3c;
+    background-color: #fef2f2;
+}
+
+.form-group-login.invalid input:focus {
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.12);
+}
+
+/* Icono de estado dentro del input */
+.input-status {
+    position: absolute;
+    right: 42px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1em;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    font-weight: 700;
+}
+
+.form-group-login.valid .input-status,
+.form-group-login.invalid .input-status {
+    opacity: 1;
+}
+
+.form-group-login.valid .input-status::before {
+    content: '✓';
+    color: #27ae60;
+}
+
+.form-group-login.invalid .input-status::before {
+    content: '✗';
+    color: #e74c3c;
+}
+
+/* ---------- Hint debajo del input (error) ---------- */
+.field-hint {
+    font-size: 0.78em;
+    color: #e74c3c;
+    margin-top: 5px;
+    min-height: 1.1em;
+    line-height: 1.3;
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.field-hint.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---------- Help debajo del input (ayuda) ---------- */
+.field-help {
+    font-size: 0.75em;
+    color: #95a5a6;
+    margin-top: 6px;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+/* ---------- Toggle contraseña ---------- */
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    padding: 4px;
+    z-index: 2;
+}
+
+.password-toggle:hover {
+    opacity: 1;
+}
+
+/* ---------- Opciones adicionales ---------- */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0 25px;
+    font-size: 0.85em;
+}
+
+.checkbox-label {
+    color: #555;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.checkbox-label input {
+    cursor: pointer;
+    accent-color: #e67e22;
+}
+
+.forgot-password {
+    color: #e67e22;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.forgot-password:hover {
+    color: #d35400;
+    text-decoration: underline;
+}
+
+/* ---------- Botón principal con spinner ---------- */
+.btn-login-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(211, 84, 0, 0.3);
+    letter-spacing: 0.5px;
+    transition: all 0.25s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 48px;
+}
+
+.btn-login-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(211, 84, 0, 0.4);
+}
+
+.btn-login-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-login-primary:disabled {
+    opacity: 0.75;
+    cursor: wait;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-login-primary.loading::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: btn-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- MFA ---------- */
+.mfa-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.mfa-icon {
+    font-size: 2.5em;
+    display: block;
+    margin-bottom: 10px;
+    animation: mfa-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes mfa-pop {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.mfa-info p {
+    color: #555;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
+#codigoMfa {
+    text-align: center;
+    font-size: 1.6em;
+    letter-spacing: 8px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    padding-right: 16px;
+}
+
+.mfa-countdown {
+    text-align: center;
+    font-size: 0.8em;
+    color: #95a5a6;
+    margin-top: 6px;
+    min-height: 1.2em;
+    transition: color 0.2s;
+}
+
+.mfa-countdown.warning {
+    color: #e67e22;
+    font-weight: 600;
+}
+
+.mfa-countdown.expired {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.mfa-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-back {
+    padding: 12px 25px;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.95em;
+}
+
+.btn-back:hover {
+    background-color: #d5dbdb;
+}
+
+.mfa-actions .btn-login-primary {
+    flex: 1;
+    width: auto;
+}
+
+/* ---------- Reenviar código ---------- */
+.mfa-resend {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
+
+/* ---------- Footer ---------- */
+.login-footer {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #f0ebe0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75em;
+    color: #95a5a6;
+}
+
+.version {
+    background-color: #f0ebe0;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    color: #7f8c8d;
+}
+
+/* ---------- Shake para errores ---------- */
+.shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-6px); }
+    40%, 60% { transform: translateX(6px); }
+}
+
+/* ---------- Password rules (reset) ---------- */
+.password-rules {
+    margin: 15px 0;
+    padding: 12px 16px;
+    background: #faf9f7;
+    border-radius: 10px;
+    font-size: 0.82em;
+}
+
+.password-rules .rule {
+    padding: 4px 0;
+    color: #95a5a6;
+    transition: color 0.2s;
+}
+
+.password-rules .rule::before {
+    content: '○ ';
+    margin-right: 6px;
+    font-weight: 700;
+}
+
+.password-rules .rule.ok {
+    color: #27ae60;
+}
+
+.password-rules .rule.ok::before {
+    content: '✓ ';
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 550px) {
+    .login-card {
+        padding: 30px 20px 25px;
+    }
+    
+    .login-title { font-size: 1.15em; }
+    .login-subtitle { font-size: 0.8em; }
+    
+    .form-options {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .login-logos { gap: 15px; }
+    .logo-muni { width: 60px; height: 60px; }
+    .logo-cesfam { width: 50px; height: 50px; }
+    
+    .login-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    #codigoMfa { font-size: 1.4em; letter-spacing: 6px; }
+}

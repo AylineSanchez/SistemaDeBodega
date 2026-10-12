@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/bodega.css">
+    <style>
+        /* ============================================================
+           ESTILOS EXCLUSIVOS DEL DASHBOARD
+           ============================================================ */
+        
+        .welcome-banner {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(230, 126, 34, 0.3);
+        }
+        
+        .welcome-banner h2 {
+            font-size: 1.5em;
+            margin-bottom: 8px;
+        }
+        
+        .welcome-banner p {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        
+        /* KPIs */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border-left: 4px solid #e67e22;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        .kpi-icon {
+            font-size: 1.8em;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .kpi-number {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #d35400;
+            display: block;
+            line-height: 1.1;
+        }
+        
+        .kpi-label {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 6px;
+            display: block;
+        }
+        
+        /* Panel de Alertas */
+        .alert-panel {
+            background-color: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .alert-header h3 {
+            color: #2c3e50;
+            font-size: 1.15em;
+        }
+        
+        .alert-count {
+            background-color: #f0ebe0;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .alerts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+        }
+        
+        .alert-card {
+            padding: 18px 20px;
+            border-radius: 12px;
+            border: none;
+            border-left: 6px solid;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            width: 100%;
+        }
+        
+        .alert-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        
+        .alert-card.red {
+            border-left-color: #e74c3c;
+            background-color: #fdedec;
+        }
+        
+        .alert-card.yellow {
+            border-left-color: #f1c40f;
+            background-color: #fef9e7;
+        }
+        
+        .alert-card.green {
+            border-left-color: #2ecc71;
+            background-color: #eafaf1;
+        }
+        
+        .alert-icon {
+            font-size: 1.6em;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .alert-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-weight: 700;
+            font-size: 0.95em;
+            color: #2c3e50;
+        }
+        
+        .alert-desc {
+            font-size: 0.85em;
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .alert-action {
+            font-size: 0.78em;
+            font-weight: 600;
+            color: #d35400;
+            margin-top: 6px;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        
+        /* Accesos rápidos */
+        .quick-access-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+        
+        .quick-card {
+            background: white;
+            border-radius: 14px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #e67e22;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .quick-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        }
+        
+        .quick-icon {
+            font-size: 2.5em;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .quick-title {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+        
+        .quick-desc {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    
+    <!-- Header (se llena por JS) -->
+    <header id="app-header"></header>
+    
+    <!-- Layout principal -->
+    <div class="main-layout">
+        
+        <!-- Sidebar (se llena por JS) -->
+        <nav id="app-sidebar"></nav>
+        
+        <!-- Contenido -->
+        <main class="app-main">
+            
+            <!-- Bienvenida -->
+            <div class="welcome-banner">
+                <h2 id="welcomeTitle">Bienvenido/a 👋</h2>
+                <p id="welcomeSubtitle">Panel de Control - Sistema Bodega DSM Santa Cruz</p>
+            </div>
+            
+            <!-- KPIs -->
+            <div class="kpi-grid" id="kpiGrid">
+                <div class="kpi-card" onclick="window.location.href='/articulos.html'">
+                    <span class="kpi-icon">📦</span>
+                    <span class="kpi-number" id="kpiArticulos">-</span>
+                    <span class="kpi-label">Artículos Totales</span>
+                </div>
+                <div class="kpi-card" onclick="window.location.href='/articulos.html?estado=CRITICO'">
+                    <span class="kpi-icon">🟠</span>
+                    <span class="kpi-number" id="kpiCriticos">-</span>
+                    <span class="kpi-label">Stock Crítico</span>
+                </div>
+                <div class="kpi-card" onclick="window.location.href='/articulos.html?estado=QUIEBRE'">
+                    <span class="kpi-icon">🔴</span>
+                    <span class="kpi-number" id="kpiQuiebres">-</span>
+                    <span class="kpi-label">Quiebres de Stock</span>
+                </div>
+                <div class="kpi-card" onclick="window.location.href='/articulos.html'">
+                    <span class="kpi-icon">🏢</span>
+                    <span class="kpi-number" id="kpiBodegas">-</span>
+                    <span class="kpi-label">Bodegas Activas</span>
+                </div>
+            </div>
+            
+            <!-- Panel de Alertas -->
+            <div class="alert-panel">
+                <div class="alert-header">
+                    <h3>🚨 Panel de Alertas</h3>
+                    <span class="alert-count" id="alertCount">Cargando...</span>
+                </div>
+                <div class="alerts-grid" id="alertsGrid">
+                    <!-- Se llena por JS -->
+                </div>
+            </div>
+            
+            <!-- Accesos rápidos -->
+            <h3 style="margin-bottom:18px;color:#2c3e50;">🚀 Accesos Rápidos</h3>
+            <div class="quick-access-grid">
+                <a href="/articulos.html" class="quick-card">
+                    <span class="quick-icon">📦</span>
+                    <div class="quick-title">Maestro de Artículos</div>
+                    <div class="quick-desc">Ver, crear y editar todos los artículos del catálogo</div>
+                </a>
+                
+                <a href="/articulos.html?estado=QUIEBRE" class="quick-card">
+                    <span class="quick-icon">🔴</span>
+                    <div class="quick-title">Artículos en Quiebre</div>
+                    <div class="quick-desc">Productos sin stock que necesitan reposición urgente</div>
+                </a>
+                
+                <a href="/articulos.html?nuevo=1" class="quick-card">
+                    <span class="quick-icon">➕</span>
+                    <div class="quick-title">Nuevo Artículo</div>
+                    <div class="quick-desc">Registrar un nuevo producto en el maestro</div>
+                </a>
+                
+                <a href="/qr-print.html" class="quick-card">
+                    <span class="quick-icon">🔳</span>
+                    <div class="quick-title">Códigos QR</div>
+                    <div class="quick-desc">Generar e imprimir códigos QR para los artículos</div>
+                </a>
+            </div>
+            
+        </main>
+    </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/session-helper.js"></script>
+<script src="/js/layout.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

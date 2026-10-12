@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trazabilidad NT 226 - Sistema Bodega DSM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link rel="stylesheet" href="/css/bodega.css">
+    <style>
+        /* ============================================================
+           ESTILOS EXCLUSIVOS DE TRAZABILIDAD
+           ============================================================ */
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0ebe0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #7f8c8d;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+
+        .tab:hover { color: #e67e22; }
+        .tab.active {
+            color: #d35400;
+            border-bottom-color: #e67e22;
+        }
+
+        /* ---------- Tarjeta de bloqueo ---------- */
+        .block-card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 30px;
+            border-left: 6px solid #e74c3c;
+        }
+
+        .block-header {
+            background: linear-gradient(135deg, #fdedec, #fadbd8);
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .block-icon { font-size: 2em; }
+
+        .block-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #c0392b;
+        }
+
+        .block-subtitle {
+            background-color: #e74c3c;
+            color: white;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .block-body { padding: 25px; }
+
+        .block-body textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            background-color: #fafafa;
+        }
+
+        /* ---------- Lotes bloqueados ---------- */
+        .blocked-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 18px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #e74c3c;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .blocked-item.desbloqueado {
+            border-left-color: #27ae60;
+            opacity: 0.7;
+        }
+
+        .blocked-info {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+            color: #555;
+            flex: 1;
+        }
+
+        .blocked-info strong { color: #2c3e50; }
+
+        /* ---------- Formulario ---------- */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .form-group label .required { color: #e74c3c; }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95em;
+            background-color: #faf9f7;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #e67e22;
+            outline: none;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+        }
+
+        /* ---------- Badges tipo alerta ---------- */
+        .badge-alerta {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.72em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-alerta.ALERTA_ISP { background: #fdedec; color: #c0392b; }
+        .badge-alerta.RETIRO_MERCADO { background: #fef9e7; color: #b7950b; }
+        .badge-alerta.DEFECTO_FABRICACION { background: #fdedec; color: #c0392b; }
+        .badge-alerta.CONTAMINACION { background: #2c3e50; color: white; }
+        .badge-alerta.OTRO { background: #ecf0f1; color: #7f8c8d; }
+
+        /* ---------- Estado ---------- */
+        .estado-ACTIVO { background: #fdedec; color: #c0392b; }
+        .estado-LEVANTADO { background: #d5f5e3; color: #1e8449; }
+        .estado-PARCIAL { background: #fef9e7; color: #b7950b; }
+
+        /* ---------- Tarjeta datos ---------- */
+        .data-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .data-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .data-label {
+            font-size: 0.78em;
+            color: #95a5a6;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .data-value {
+            font-size: 0.95em;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    
+    <header id="app-header"></header>
+    
+    <div class="main-layout">
+        
+        <nav id="app-sidebar"></nav>
+        
+        <main class="app-main">
+            
+            <div class="card-header">
+                <h2 class="page-title">🛡️ Gestión de Trazabilidad Sanitaria</h2>
+                <span style="font-size:0.85em;color:#7f8c8d;">NT 226 y NT 247 — MINSAL</span>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="cambiarTab('bloqueo')" id="tabBloqueo">
+                    ⛔ Bloqueo Sanitario
+                </button>
+                <button class="tab" onclick="cambiarTab('bloqueados')" id="tabBloqueados">
+                    📋 Lotes Bloqueados
+                </button>
+                <button class="tab" onclick="cambiarTab('trazabilidad')" id="tabTrazabilidad">
+                    📄 Trazabilidad DM
+                </button>
+            </div>
+            
+            <!-- ============================================================
+                 TAB 1: BLOQUEO SANITARIO
+                 ============================================================ -->
+            <div id="contenidoBloqueo">
+                
+                <div class="block-card">
+                    <div class="block-header">
+                        <span class="block-icon">⛔</span>
+                        <span class="block-title">Bloqueo Sanitario de Lote</span>
+                        <span class="block-subtitle">Alerta ISP - Bloqueo inmediato</span>
+                    </div>
+                    
+                    <div class="block-body">
+                        
+                        <!-- Buscador de lote -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="loteSearch">🔍 Buscar lote por N° o SKU <span class="required">*</span></label>
+                                <input type="text" id="loteSearch" 
+                                       placeholder="Escriba N° lote o SKU..."
+                                       autocomplete="off">
+                                <div class="producto-suggestions" id="loteSuggestions"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Producto Asociado</label>
+                                <input type="text" id="productoAsociado" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Vencimiento</label>
+                                <input type="text" id="vencimientoLote" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Stock Afectado</label>
+                                <input type="text" id="stockLote" disabled>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tipoAlerta">Tipo de Alerta <span class="required">*</span></label>
+                                <select id="tipoAlerta" required>
+                                    <option value="ALERTA_ISP">🚨 Alerta ISP</option>
+                                    <option value="RETIRO_MERCADO">📦 Retiro de Mercado</option>
+                                    <option value="DEFECTO_FABRICACION">⚠️ Defecto de Fabricación</option>
+                                    <option value="CONTAMINACION">☣️ Contaminación</option>
+                                    <option value="OTRO">📝 Otro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="numeroOficioIsp">N° Oficio / Alerta ISP</label>
+                                <input type="text" id="numeroOficioIsp" placeholder="Ej: ISP-AL-2026-0452">
+                            </div>
+                            <div class="form-group">
+                                <label for="fechaAlerta">Fecha de Alerta <span class="required">*</span></label>
+                                <input type="date" id="fechaAlerta" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="descripcionAlerta">Descripción de la Alerta</label>
+                            <textarea id="descripcionAlerta" rows="2"
+                                      placeholder="Descripción del motivo de la alerta ISP..."></textarea>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top:15px;">
+                            <label for="justificacion">Justificación del Bloqueo <span class="required">*</span></label>
+                            <textarea id="justificacion" rows="3" required
+                                      placeholder="Describa el motivo del bloqueo según alerta ISP (mínimo 10 caracteres)..."></textarea>
+                        </div>
+                        
+                        <div style="display:flex;gap:15px;margin-top:20px;">
+                            <button class="btn btn-danger" onclick="crearBloqueo()">
+                                ⛔ Bloquear Lote
+                            </button>
+                            <button class="btn btn-secondary" onclick="limpiarFormularioBloqueo()">
+                                Cancelar
+                            </button>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- ============================================================
+                 TAB 2: LOTES BLOQUEADOS
+                 ============================================================ -->
+            <div id="contenidoBloqueados" style="display:none;">
+                
+                <div class="search-bar" style="margin-bottom:15px;">
+                    <input type="text" id="searchBloqueos" class="search-input"
+                           placeholder="🔍 Buscar por N° bloqueo, lote, SKU, oficio...">
+                    <select id="estadoBloqueoFilter" class="filter-select">
+                        <option value="">Todos los estados</option>
+                        <option value="ACTIVO">🔴 Activos</option>
+                        <option value="LEVANTADO">🟢 Levantados</option>
+                    </select>
+                </div>
+                
+                <div id="listaBloqueos"></div>
+                
+                <div class="pagination">
+                    <span class="pagination-info" id="bloqueosInfo">Cargando...</span>
+                    <div class="pagination-buttons" id="bloqueosPagination"></div>
+                </div>
+                
+            </div>
+            
+            <!-- ============================================================
+                 TAB 3: TRAZABILIDAD DM
+                 ============================================================ -->
+            <div id="contenidoTrazabilidad" style="display:none;">
+                
+                <div class="search-bar" style="margin-bottom:15px;">
+                    <input type="text" id="searchTrazabilidad" class="search-input"
+                           placeholder="🔍 Buscar por producto, lote, registro sanitario...">
+                    <select id="estadoDmFilter" class="filter-select">
+                        <option value="">Todos los estados DM</option>
+                        <option value="NUEVO">Nuevo</option>
+                        <option value="USADO">Usado</option>
+                        <option value="VENCIDO">Vencido</option>
+                        <option value="DAÑADO">Dañado</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="exportarTrazabilidad()">
+                        📄 Exportar
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Lote / Serie</th>
+                                <th>Vencimiento</th>
+                                <th>Proveedor</th>
+                                <th>Reg. Sanitario</th>
+                                <th>Estado DM</th>
+                                <th style="text-align:right;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trazabilidadBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination">
+                    <span class="pagination-info" id="trazabilidadInfo">Cargando...</span>
+                    <div class="pagination-buttons" id="trazabilidadPagination"></div>
+                </div>
+                
+            </div>
+            
+        </main>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Modal: Confirmar levantar bloqueo -->
+    <div class="modal-overlay" id="modalLevantar">
+        <div class="modal">
+            <h3>🟢 Levantar Bloqueo Sanitario</h3>
+            <p>¿Está seguro de levantar el bloqueo del lote <strong id="levantarLote"></strong>?</p>
+            <p style="font-size:0.85em;color:#7f8c8d;">
+                El lote podrá volver a despacharse. Esta acción quedará registrada en el Kardex.
+            </p>
+            
+            <div class="form-group" style="margin-top:15px;">
+                <label for="motivoLevantamiento">Motivo del Levantamiento <span class="required">*</span></label>
+                <textarea id="motivoLevantamiento" rows="3" required
+                          placeholder="Ej: Alerta resuelta por ISP según oficio N° ..."></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModalLevantar()">Cancelar</button>
+                <button class="btn btn-success" onclick="confirmarLevantamiento()">
+                    🟢 Levantar Bloqueo
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal: Ver detalle de bloqueo -->
+    <div class="modal-overlay" id="modalDetalleBloqueo">
+        <div class="modal modal-xl">
+            <h3>📋 Detalle del Bloqueo</h3>
+            <div id="detalleBloqueoContent"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModalDetalleBloqueo()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/session-helper.js"></script>
+<script src="/js/layout.js"></script>
+<script src="/js/trazabilidad.js"></script>
+</body>
+</html>
