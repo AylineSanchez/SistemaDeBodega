@@ -236,6 +236,28 @@
             margin-top: 2px;
         }
 
+        /* ⚡ Encabezado de Stock clickeable para ordenar */
+        .th-sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .th-sortable:hover {
+            background: #fdf6ec;
+        }
+
+        .th-sortable .sort-icon {
+            margin-left: 6px;
+            opacity: 0.5;
+            font-size: 0.9em;
+        }
+
+        .th-sortable .sort-icon.active {
+            opacity: 1;
+            color: #d35400;
+        }
+
         /* ============================================================
            ESTILOS DEL MODAL DE QRs (MEJORADOS)
            ============================================================ */
@@ -430,10 +452,6 @@
                     <option value="NORMAL">🟢 Normal</option>
                 </select>
 
-                <label style="display:flex;align-items:center;gap:6px;font-size:0.9em;color:#555;padding:0 8px;">
-                    <input type="checkbox" id="incluirInactivos"> Ver inactivos
-                </label>
-
                 <button class="btn btn-secondary" onclick="limpiarFiltros()">
                     🔄 Limpiar
                 </button>
@@ -447,7 +465,11 @@
                             <th>SKU</th>
                             <th>Nombre</th>
                             <th>Categoría</th>
-                            <th>Stock / Mín-Máx</th>
+                            <!-- ⚡ Encabezado clickeable para ordenar por stock -->
+                            <th class="th-sortable" onclick="toggleOrdenStock()" title="Clic para ordenar por stock">
+                                Stock / Mín-Máx
+                                <span class="sort-icon" id="sortIconStock">⇅</span>
+                            </th>
                             <th>Estado</th>
                             <th style="text-align:center;">Bodegas</th>
                             <th style="text-align:right;">Acciones</th>

@@ -4,6 +4,7 @@
 
 const API_BASE = '/api/auth';
 const DASHBOARD_URL = 'http://localhost:8082/dashboard.html';
+const DESPACHO_URL = 'http://localhost:8082/despacho.html';  // ⚡ NUEVO
 const MFA_TTL_SECONDS = 300;
 
 let sessionToken = null;
@@ -89,7 +90,6 @@ function validarRutField() {
         return false;
     }
     
-    // Formato mínimo: X.XXX.XXX-X o XX.XXX.XXX-X
     if (!/^\d{1,2}\.\d{3}\.\d{3}-[\dK]$/.test(rut)) {
         marcarInvalido('group-rut', 'hint-rut',
             'RUT incompleto. Ejemplo: 12.345.678-5');
@@ -321,9 +321,10 @@ function detenerCountdown() {
 }
 
 /* ============================================================
-   GUARDAR SESIÓN Y REDIRIGIR AL DASHBOARD
-   ⚠️ Pasa el token por la URL porque localStorage es por origen
-   y el dashboard está en otro puerto (otro origen).
+   GUARDAR SESIÓN Y REDIRIGIR
+   ⚡ NUEVO: Redirige según rol
+   - ENCARGADO_DEPENDENCIA → /despacho.html
+   - Otros roles → /dashboard.html
    ============================================================ */
 function guardarSesion(data) {
     // Guardar en el localStorage del auth-service (por si acaso)
@@ -333,8 +334,7 @@ function guardarSesion(data) {
     localStorage.setItem('expiresIn', data.expiresIn);
     localStorage.setItem('loginTime', Date.now().toString());
     
-    // Construir URL del dashboard con el token como parámetro
-    // Así el dashboard puede leerlo y guardarlo en SU localStorage
+    // ⚡ Construir URL con el token como parámetro
     const params = new URLSearchParams({
         token: data.token,
         nombre: data.usuario.nombreCompleto,
@@ -343,8 +343,16 @@ function guardarSesion(data) {
         email: data.usuario.email || ''
     });
     
-    console.log('✅ [LOGIN] Sesión guardada, redirigiendo al dashboard...');
-    window.location.href = `${DASHBOARD_URL}?${params.toString()}`;
+    // ⚡ Redirigir según rol
+    const esEncargadoDependencia = data.usuario.rol === 'ENCARGADO_DEPENDENCIA';
+    
+    if (esEncargadoDependencia) {
+        console.log('✅ [LOGIN] Encargado de Dependencia, redirigiendo a Pedidos (despacho.html)...');
+        window.location.href = `${DESPACHO_URL}?${params.toString()}`;
+    } else {
+        console.log('✅ [LOGIN] Sesión guardada, redirigiendo al Dashboard...');
+        window.location.href = `${DASHBOARD_URL}?${params.toString()}`;
+    }
 }
 
 /* ============================================================

@@ -9,10 +9,14 @@ import java.util.Optional;
 
 @Repository
 public interface CentroCostoRepository extends JpaRepository<CentroCosto, Integer> {
-    
+
     Optional<CentroCosto> findByCodigo(String codigo);
-    
+
+    boolean existsByCodigo(String codigo);
+
     List<CentroCosto> findByActivoTrueOrderByNombreAsc();
-    
+
+    List<CentroCosto> findAllByOrderByCodigoAsc();
+
     List<CentroCosto> findByTipo(String tipo);
 }

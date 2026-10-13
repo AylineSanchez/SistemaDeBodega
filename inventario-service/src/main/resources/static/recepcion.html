@@ -12,6 +12,31 @@
            ESTILOS ESPECÍFICOS DE RECEPCIÓN
            ============================================================ */
 
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0ebe0;
+        }
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #7f8c8d;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+        .tab:hover { color: #e67e22; }
+        .tab.active {
+            color: #d35400;
+            border-bottom-color: #e67e22;
+        }
+
+        /* ---------- Formularios ---------- */
         .form-card {
             background: white;
             border-radius: 16px;
@@ -19,7 +44,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             margin-bottom: 20px;
         }
-
         .form-card h3 {
             color: #2c3e50;
             font-size: 1.05em;
@@ -27,30 +51,29 @@
             padding-bottom: 10px;
             border-bottom: 2px solid #f0ebe0;
         }
-
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 15px;
         }
-
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 5px;
+            position: relative;
         }
-
         .form-group label {
             font-weight: 600;
             font-size: 0.85em;
             color: #555;
         }
-
-        .form-group label .required {
-            color: #e74c3c;
+        .form-group label .required { color: #e74c3c; }
+        .form-group label .optional {
+            color: #95a5a6;
+            font-weight: 400;
+            font-size: 0.9em;
         }
-
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -59,10 +82,8 @@
             border-radius: 8px;
             font-size: 0.95em;
             background-color: #faf9f7;
-            transition: 0.2s;
             font-family: inherit;
         }
-
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
@@ -72,11 +93,16 @@
             box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
         }
 
-        .form-group input:disabled,
-        .form-group textarea:disabled {
-            background-color: #f0ece4;
-            color: #95a5a6;
+        /* ⚡ Inputs de solo lectura (totales) */
+        .form-group input[readonly] {
+            background-color: #f0ebe0 !important;
+            color: #2c3e50;
+            font-weight: 700;
             cursor: not-allowed;
+            border-color: #e0d9ce;
+        }
+        .form-group input[readonly]:focus {
+            box-shadow: none;
         }
 
         /* ---------- Tabla de detalles ---------- */
@@ -86,395 +112,185 @@
             font-size: 0.9em;
             margin-top: 15px;
         }
-
         .detalles-table thead {
-            background-color: #f8f5f0;
+            background: #f8f5f0;
         }
-
         .detalles-table th {
-            padding: 10px 12px;
+            padding: 12px 10px;
             text-align: left;
             font-weight: 700;
             color: #2c3e50;
             border-bottom: 2px solid #e0d9ce;
-            font-size: 0.85em;
+            font-size: 0.82em;
+            text-transform: uppercase;
         }
-
         .detalles-table td {
-            padding: 10px 12px;
+            padding: 12px 10px;
             border-bottom: 1px solid #f0ebe0;
             vertical-align: middle;
         }
-
         .detalles-table tbody tr:hover {
-            background-color: #fdfaf6;
+            background: #fdfaf6;
         }
-
-        .btn-sm {
-            padding: 6px 14px;
-            font-size: 0.8em;
-            border-radius: 8px;
-        }
-
-        .alert-info {
-            background-color: #eaf2f8;
-            border-left: 4px solid #3498db;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            color: #2874a6;
-            margin: 12px 0;
-        }
-
-        .alert-warning {
-            background-color: #fef9e7;
-            border-left: 4px solid #f39c12;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            color: #7d6608;
-            margin: 12px 0;
-        }
-
-        .totales-card {
-            background: linear-gradient(135deg, #f8f5f0, #f0ebe0);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 15px;
-        }
-
-        .totales-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 0.95em;
-        }
-
-        .totales-row.total {
-            border-top: 2px solid #d5dbdb;
-            margin-top: 8px;
-            padding-top: 12px;
-            font-size: 1.15em;
-            font-weight: 700;
-            color: #d35400;
-        }
-
-        .estado-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.75em;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .estado-BORRADOR   { background-color: #ecf0f1; color: #7f8c8d; }
-        .estado-CONFIRMADA { background-color: #d5f5e3; color: #1e8449; }
-        .estado-ANULADA    { background-color: #fadbd8; color: #c0392b; }
-        .estado-PARCIAL    { background-color: #fef9e7; color: #b7950b; }
-
-        .modal-xl {
-            max-width: 900px !important;
-        }
-
-        /* ---------- Combobox de productos ---------- */
-        .producto-combobox {
-            position: relative;
-            width: 100%;
-        }
-
-        .producto-combobox .combo-input {
-            width: 100%;
-            padding: 10px 40px 10px 14px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 0.95em;
-            background-color: #faf9f7;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .producto-combobox .combo-input:focus {
-            border-color: #e67e22;
-            outline: none;
-            background-color: white;
-            box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
-        }
-
-        .producto-combobox .combo-arrow {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: #95a5a6;
-            font-size: 0.9em;
-        }
-
-        .producto-combobox .combo-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 350px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-
-        .producto-combobox .combo-list.active {
-            display: block;
-        }
-
-        .producto-combobox .combo-item {
-            padding: 10px 14px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0ebe0;
-            font-size: 0.9em;
-        }
-
-        .producto-combobox .combo-item:hover,
-        .producto-combobox .combo-item.highlighted {
-            background-color: #fdf6ec;
-        }
-
-        .producto-combobox .combo-item .sku {
+        .detalles-table .sku-cell {
             font-family: 'Courier New', monospace;
             font-weight: 700;
             color: #d35400;
             font-size: 0.85em;
         }
-
-        .producto-combobox .combo-item .nombre {
-            color: #2c3e50;
-            font-weight: 600;
+        .detalles-table .actions-cell {
+            text-align: center;
         }
 
-        .producto-combobox .combo-item .meta {
-            font-size: 0.75em;
-            color: #95a5a6;
+        /* ---------- Buscador con sugerencias ---------- */
+        .producto-search { position: relative; }
+        .producto-suggestions,
+        .combo-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e0d9ce;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            margin-top: 4px;
+        }
+        .producto-suggestions.active,
+        .combo-list.active { display: block; }
+
+        .combo-item,
+        .producto-option {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0ebe0;
+            font-size: 0.88em;
+            transition: background 0.15s;
+        }
+        .combo-item:last-child,
+        .producto-option:last-child { border-bottom: none; }
+        .combo-item:hover,
+        .producto-option:hover { background: #fdf6ec; }
+        .combo-item .sku,
+        .producto-option .sku {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #d35400;
+        }
+        .combo-item .nombre {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .combo-item .meta {
+            font-size: 0.78em;
+            color: #7f8c8d;
             margin-top: 3px;
         }
-
-        .producto-combobox .combo-empty {
+        .combo-empty {
             padding: 15px;
             text-align: center;
             color: #95a5a6;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
-        /* ============================================================
-           ESTILOS DE IMPRESIÓN
-           ============================================================ */
-        @media print {
-            @page {
-                margin: 1cm;
-                size: A4 portrait;
-            }
+        /* ---------- Totales ---------- */
+        .totales-card {
+            background: linear-gradient(135deg, #fef5e7, #fdebd0);
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-top: 20px;
+            border-left: 5px solid #e67e22;
+        }
+        .totales-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 1em;
+            color: #555;
+        }
+        .totales-row.total {
+            border-top: 2px solid #e67e22;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-size: 1.2em;
+            color: #d35400;
+            font-weight: 700;
+        }
+        .totales-row strong {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        .totales-row.total strong {
+            color: #d35400;
+            font-size: 1.15em;
+        }
 
-            * {
-                box-shadow: none !important;
-                animation: none !important;
-                transition: none !important;
-            }
+        /* ---------- Botón icon ---------- */
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover {
+            background: rgba(0,0,0,0.06);
+            transform: scale(1.1);
+        }
+        .btn-icon.delete:hover {
+            background: #fdecea;
+        }
 
-            html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                background: white !important;
-                font-size: 11px !important;
-                height: auto !important;
-                min-height: 0 !important;
-                overflow: visible !important;
-            }
+        /* ---------- Badges ---------- */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+        .estado-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .estado-BORRADOR   { background: #ecf0f1; color: #7f8c8d; }
+        .estado-CONFIRMADA { background: #d5f5e3; color: #1e8449; }
+        .estado-ANULADA    { background: #fadbd8; color: #c0392b; }
+        .estado-PARCIAL    { background: #fef9e7; color: #b7950b; }
 
-            /* Ocultar la estructura del layout */
-            #app-header,
-            #app-sidebar,
-            .app-main > .card-header,
-            #formularioRecepcion,
-            #historialRecepciones,
-            .loading-overlay,
-            #modalProducto,
-            #modalConfirm {
-                display: none !important;
-                visibility: hidden !important;
-            }
+        /* ---------- Alert de lote requerido ---------- */
+        .alert-lote {
+            background: #fef9e7;
+            border-left: 4px solid #f39c12;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #7d6608;
+            margin-bottom: 15px;
+        }
 
-            .app-container,
-            .main-layout,
-            .app-main {
-                display: block !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                height: auto !important;
-                min-height: 0 !important;
-                overflow: visible !important;
-                background: white !important;
-            }
-
-            /* ⚡ Forzar el modal a display block */
-            #modalDetalle {
-                display: block !important;
-                position: static !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                height: auto !important;
-                min-height: 0 !important;
-                max-height: none !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: white !important;
-                z-index: auto !important;
-                top: auto !important;
-                left: auto !important;
-                right: auto !important;
-                bottom: auto !important;
-                overflow: visible !important;
-            }
-
-            #modalDetalle .modal {
-                display: block !important;
-                position: static !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                box-shadow: none !important;
-                border-radius: 0 !important;
-                max-width: 100% !important;
-                width: 100% !important;
-                max-height: none !important;
-                height: auto !important;
-                min-height: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                border: none !important;
-                background: white !important;
-                overflow: visible !important;
-                animation: none !important;
-            }
-
-            #modalDetalle > .modal > h3 {
-                display: none !important;
-            }
-
-            #modalDetalle .modal-actions {
-                display: none !important;
-            }
-
-            /* Encabezado de impresión */
-            #modalDetalle .modal::before {
-                content: "Sistema Bodega DSM Santa Cruz — Detalle de Recepción";
-                display: block !important;
-                text-align: center;
-                font-weight: 700;
-                font-size: 13px;
-                padding-bottom: 6px;
-                margin-bottom: 10px;
-                border-bottom: 2px solid #333;
-                color: #000;
-            }
-
-            #detalleContent {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-
-            #modalDetalle .form-card {
-                display: block !important;
-                visibility: visible !important;
-                box-shadow: none !important;
-                border: 1px solid #999 !important;
-                padding: 8px !important;
-                margin: 0 0 6px 0 !important;
-                page-break-inside: avoid;
-                background: white !important;
-            }
-
-            #modalDetalle .form-card h3 {
-                font-size: 11px !important;
-                border-bottom: 1px solid #ccc !important;
-                padding-bottom: 4px !important;
-                margin: 0 0 6px 0 !important;
-                color: #000 !important;
-            }
-
-            #modalDetalle .form-row {
-                display: grid !important;
-                grid-template-columns: repeat(2, 1fr) !important;
-                gap: 3px !important;
-                font-size: 10px !important;
-            }
-
-            #modalDetalle .detalles-table {
-                display: table !important;
-                visibility: visible !important;
-                font-size: 9.5px !important;
-                width: 100% !important;
-                border-collapse: collapse !important;
-            }
-
-            #modalDetalle .detalles-table thead {
-                display: table-header-group !important;
-            }
-
-            #modalDetalle .detalles-table tbody {
-                display: table-row-group !important;
-            }
-
-            #modalDetalle .detalles-table tr {
-                display: table-row !important;
-                page-break-inside: avoid;
-            }
-
-            #modalDetalle .detalles-table th,
-            #modalDetalle .detalles-table td {
-                display: table-cell !important;
-                visibility: visible !important;
-                padding: 3px 5px !important;
-                border: 1px solid #999 !important;
-                color: #000 !important;
-            }
-
-            #modalDetalle .detalles-table thead th {
-                background: #e8e8e8 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                font-weight: 700;
-            }
-
-            #modalDetalle .totales-card {
-                display: block !important;
-                visibility: visible !important;
-                background: #f5f5f5 !important;
-                padding: 6px 10px !important;
-                font-size: 10px !important;
-                page-break-inside: avoid;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                margin-top: 8px !important;
-                border: 1px solid #ccc !important;
-            }
-
-            #modalDetalle .totales-row {
-                display: flex !important;
-                justify-content: space-between;
-                padding: 1px 0 !important;
-            }
-
-            #modalDetalle .totales-row.total {
-                font-size: 11px !important;
-                border-top: 1px solid #666 !important;
-                padding-top: 4px !important;
-                margin-top: 3px !important;
+        /* ---------- Responsive ---------- */
+        @media (max-width: 850px) {
+            .detalles-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
             }
         }
     </style>
@@ -502,10 +318,15 @@
                 </div>
             </div>
 
-            <div id="formularioRecepcion">
+            <!-- ============================================================
+                 FORMULARIO DE RECEPCIÓN
+                 ============================================================ -->
+            <div id="formularioRecepcion" style="display:block;">
 
+                <!-- Datos del documento -->
                 <div class="form-card">
                     <h3>📄 Datos del Documento</h3>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="tipoDocumento">Tipo de Documento <span class="required">*</span></label>
@@ -517,17 +338,22 @@
                         </div>
                         <div class="form-group">
                             <label for="numeroDocumento">N° Documento <span class="required">*</span></label>
-                            <input type="text" id="numeroDocumento" placeholder="Ej: F-2026-1234" required>
+                            <input type="text" id="numeroDocumento" placeholder="Ej: 12345">
                         </div>
                         <div class="form-group">
-                            <label for="numeroOrdenCompra">N° Orden de Compra</label>
-                            <input type="text" id="numeroOrdenCompra" placeholder="Ej: OC-2026-100">
+                            <label for="numeroOrdenCompra">
+                                N° Orden de Compra <span class="optional">(opcional)</span>
+                            </label>
+                            <input type="text" id="numeroOrdenCompra" placeholder="Ej: OC-2026-001">
                         </div>
                         <div class="form-group">
-                            <label for="numeroGuiaDespacho">N° Guía de Despacho</label>
-                            <input type="text" id="numeroGuiaDespacho" placeholder="Ej: G-2026-5678">
+                            <label for="numeroGuiaDespacho">
+                                N° Guía de Despacho <span class="optional">(opcional)</span>
+                            </label>
+                            <input type="text" id="numeroGuiaDespacho" placeholder="Ej: GD-2026-001">
                         </div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="fechaEmision">Fecha de Emisión <span class="required">*</span></label>
@@ -540,19 +366,23 @@
                     </div>
                 </div>
 
+                <!-- Datos del proveedor -->
                 <div class="form-card">
                     <h3>🏢 Datos del Proveedor</h3>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="rutProveedor">RUT Proveedor <span class="required">*</span></label>
-                            <input type="text" id="rutProveedor" placeholder="Ej: 76.123.456-7" required maxlength="12">
+                            <input type="text" id="rutProveedor" placeholder="Ej: 12.345.678-5" required>
                         </div>
                         <div class="form-group">
                             <label for="nombreProveedor">Nombre Proveedor <span class="required">*</span></label>
                             <input type="text" id="nombreProveedor" placeholder="Ej: Cenabast S.A." required>
                         </div>
                         <div class="form-group">
-                            <label for="tipoProveedor">Tipo de Proveedor</label>
+                            <label for="tipoProveedor">
+                                Tipo de Proveedor <span class="optional">(opcional)</span>
+                            </label>
                             <select id="tipoProveedor">
                                 <option value="">Seleccione...</option>
                                 <option value="Cenabast">Cenabast</option>
@@ -560,39 +390,43 @@
                                 <option value="Compra Ágil">Compra Ágil</option>
                                 <option value="Licitación Pública">Licitación Pública</option>
                                 <option value="Trato Directo">Trato Directo</option>
+                                <option value="Convenio Marco">Convenio Marco</option>
+                                <option value="Otro">Otro</option>
                             </select>
                         </div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="telefonoProveedor">Teléfono</label>
-                            <input type="text" id="telefonoProveedor" placeholder="Ej: +56 2 2345 6789">
+                            <label for="telefonoProveedor">
+                                Teléfono <span class="optional">(opcional)</span>
+                            </label>
+                            <input type="text" id="telefonoProveedor" placeholder="Ej: +56 9 1234 5678">
                         </div>
-                        <div class="form-group">
-                            <label for="direccionProveedor">Dirección</label>
-                            <input type="text" id="direccionProveedor" placeholder="Ej: Av. Providencia 1234">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="direccionProveedor">
+                                Dirección <span class="optional">(opcional)</span>
+                            </label>
+                            <input type="text" id="direccionProveedor" placeholder="Ej: Av. Principal 123">
                         </div>
                     </div>
                 </div>
 
+                <!-- Detalle de productos -->
                 <div class="form-card">
                     <h3>📦 Detalle de Productos</h3>
-                    <div class="form-row">
-                        <div class="form-group" style="grid-column: span 3;">
-                            <label for="productoSearch">🔍 Buscar Producto por SKU o Nombre</label>
-                            <div class="producto-combobox" id="productoCombobox">
-                                <input type="text"
-                                       id="productoSearch"
-                                       class="combo-input"
-                                       placeholder="Haga click para ver todos los productos o escriba para filtrar..."
-                                       autocomplete="off">
-                                <span class="combo-arrow">▼</span>
-                                <div class="combo-list" id="productoComboList"></div>
-                            </div>
-                        </div>
+
+                    <!-- Buscador con combobox -->
+                    <div class="form-group producto-search" id="productoCombobox" style="margin-bottom:15px;">
+                        <label for="productoSearch">🔍 Buscar Producto por SKU o Nombre</label>
+                        <input type="text" id="productoSearch"
+                               placeholder="Haga click para ver todos los productos o escriba para filtrar..."
+                               autocomplete="off">
+                        <div class="combo-list" id="productoComboList"></div>
                     </div>
 
-                    <table class="detalles-table" id="detallesTable">
+                    <!-- Tabla de detalles -->
+                    <table class="detalles-table">
                         <thead>
                             <tr>
                                 <th>SKU</th>
@@ -603,7 +437,7 @@
                                 <th>Bodega</th>
                                 <th>V. Unitario</th>
                                 <th>Total</th>
-                                <th style="text-align:right;">Acciones</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="detallesBody">
@@ -618,22 +452,25 @@
                     </table>
                 </div>
 
+                <!-- Totales -->
                 <div class="form-card">
                     <h3>💰 Totales</h3>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="montoNeto">Monto Neto</label>
-                            <input type="number" id="montoNeto" step="0.01" value="0" onchange="recalcularTotales()">
+                            <input type="number" id="montoNeto" value="0.00" readonly step="0.01">
                         </div>
                         <div class="form-group">
                             <label for="montoIva">IVA (19%)</label>
-                            <input type="number" id="montoIva" step="0.01" value="0" readonly>
+                            <input type="number" id="montoIva" value="0.00" readonly step="0.01">
                         </div>
                         <div class="form-group">
                             <label for="montoTotal">Monto Total</label>
-                            <input type="number" id="montoTotal" step="0.01" value="0" readonly>
+                            <input type="number" id="montoTotal" value="0.00" readonly step="0.01">
                         </div>
                     </div>
+
                     <div class="totales-card">
                         <div class="totales-row">
                             <span>Total unidades:</span>
@@ -654,6 +491,7 @@
                     </div>
                 </div>
 
+                <!-- Observaciones -->
                 <div class="form-card">
                     <h3>📝 Observaciones</h3>
                     <div class="form-group">
@@ -662,72 +500,82 @@
                     </div>
                 </div>
 
+                <!-- Acciones -->
                 <div class="form-card" style="display:flex;justify-content:flex-end;gap:10px;">
-                    <button type="button" class="btn btn-secondary" onclick="cancelarFormulario()">
+                    <button class="btn btn-secondary" onclick="cancelarFormulario()">
                         Cancelar
                     </button>
-                    <button type="button" class="btn btn-success" onclick="guardarRecepcion(false)">
+                    <button class="btn btn-primary" onclick="guardarRecepcion(false)">
                         💾 Guardar Borrador
                     </button>
-                    <button type="button" class="btn btn-primary" onclick="guardarRecepcion(true)">
+                    <button class="btn btn-success" onclick="guardarRecepcion(true)">
                         ✅ Guardar y Confirmar
                     </button>
                 </div>
 
             </div>
 
+            <!-- ============================================================
+                 HISTORIAL DE RECEPCIONES
+                 ============================================================ -->
             <div id="historialRecepciones" style="display:none;">
-                <div class="card">
-                    <div class="search-bar">
-                        <input type="text" id="searchHistorial" class="search-input"
-                               placeholder="🔍 Buscar por N° recepción, documento, proveedor...">
-                        <select id="estadoFilter" class="filter-select">
-                            <option value="">Todos los estados</option>
-                            <option value="BORRADOR">📝 Borrador</option>
-                            <option value="CONFIRMADA">✅ Confirmada</option>
-                            <option value="ANULADA">❌ Anulada</option>
-                        </select>
-                        <button class="btn btn-secondary" onclick="limpiarFiltrosHistorial()">
-                            🔄 Limpiar
-                        </button>
-                    </div>
 
-                    <div class="table-container">
-                        <table class="product-table">
-                            <thead>
-                                <tr>
-                                    <th>N° Recepción</th>
-                                    <th>Documento</th>
-                                    <th>Proveedor</th>
-                                    <th>Bodega</th>
-                                    <th>Fecha</th>
-                                    <th>Líneas</th>
-                                    <th>Monto</th>
-                                    <th>Estado</th>
-                                    <th style="text-align:right;">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historialBody"></tbody>
-                        </table>
-                    </div>
-
-                    <div class="pagination">
-                        <span class="pagination-info" id="historialInfo">Cargando...</span>
-                        <div class="pagination-buttons" id="historialPagination"></div>
-                    </div>
+                <div class="search-bar" style="margin-bottom:15px;">
+                    <input type="text" id="searchHistorial" class="search-input"
+                           placeholder="🔍 Buscar por N° recepción, proveedor, documento...">
+                    <select id="estadoFilter" class="filter-select">
+                        <option value="">Todos los estados</option>
+                        <option value="BORRADOR">📝 Borrador</option>
+                        <option value="CONFIRMADA">✅ Confirmada</option>
+                        <option value="ANULADA">❌ Anulada</option>
+                        <option value="PARCIAL">⚠️ Parcial</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="limpiarFiltrosHistorial()">
+                        🔄 Limpiar
+                    </button>
                 </div>
+
+                <div class="table-container">
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>N° Recepción</th>
+                                <th>Documento</th>
+                                <th>Proveedor</th>
+                                <th>Bodega</th>
+                                <th>Fecha</th>
+                                <th>Líneas</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th style="text-align:right;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historialBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <span class="pagination-info" id="historialInfo">Cargando...</span>
+                    <div class="pagination-buttons" id="historialPagination"></div>
+                </div>
+
             </div>
 
         </main>
     </div>
 
+    <!-- Loading -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
 
+    <!-- ============================================================
+         MODAL: Agregar producto
+         ============================================================ -->
     <div class="modal-overlay" id="modalProducto">
-        <div class="modal modal-xl">
+        <div class="modal" style="max-width:600px;">
             <h3>Agregar Producto</h3>
+
             <div class="form-row">
                 <div class="form-group">
                     <label>SKU</label>
@@ -738,40 +586,46 @@
                     <input type="text" id="prodNombre" readonly>
                 </div>
             </div>
+
+            <div class="alert-lote" id="prodAlertLote" style="display:none;">
+                ⚠️ <strong>Este producto requiere:</strong>
+                <span id="loteRequired" style="display:none;">N° de lote</span>
+                <span id="vencRequired" style="display:none;">fecha de vencimiento</span>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label for="prodCantidad">Cantidad Recibida <span class="required">*</span></label>
-                    <input type="number" id="prodCantidad" min="1" value="1">
+                    <label for="prodCantidad">Cantidad <span class="required">*</span></label>
+                    <input type="number" id="prodCantidad" min="1" value="1" required>
                 </div>
                 <div class="form-group">
                     <label for="prodValorUnitario">Valor Unitario</label>
-                    <input type="number" id="prodValorUnitario" step="0.01" value="0">
+                    <input type="number" id="prodValorUnitario" min="0" step="0.01" value="0">
                 </div>
                 <div class="form-group">
                     <label for="prodMontoTotal">Monto Total</label>
-                    <input type="number" id="prodMontoTotal" step="0.01" value="0" readonly>
+                    <input type="number" id="prodMontoTotal" readonly value="0">
                 </div>
             </div>
-            <div class="alert-info" id="prodAlertLote" style="display:none;">
-                ⚠️ Este producto <strong>requiere lote y vencimiento</strong> por normativa sanitaria.
-            </div>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label for="prodLote">N° de Lote <span class="required" id="loteRequired" style="display:none;">*</span></label>
-                    <input type="text" id="prodLote" placeholder="Ej: LOTE-2026-A001">
+                    <label for="prodLote">N° Lote</label>
+                    <input type="text" id="prodLote" placeholder="Ej: LOTE-001">
                 </div>
                 <div class="form-group">
-                    <label for="prodVencimiento">Fecha de Vencimiento <span class="required" id="vencRequired" style="display:none;">*</span></label>
+                    <label for="prodVencimiento">Fecha Vencimiento</label>
                     <input type="date" id="prodVencimiento">
                 </div>
                 <div class="form-group">
                     <label for="prodRegistroIsp">Registro ISP</label>
-                    <input type="text" id="prodRegistroIsp" placeholder="Ej: DM-03865">
+                    <input type="text" id="prodRegistroIsp" placeholder="Ej: DM-04593">
                 </div>
             </div>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label for="prodUbicacion">Bodega de Almacenamiento <span class="required">*</span></label>
+                    <label for="prodUbicacion">Bodega Destino <span class="required">*</span></label>
                     <select id="prodUbicacion" required>
                         <option value="">Seleccione bodega...</option>
                     </select>
@@ -785,36 +639,38 @@
                     <input type="text" id="prodNivel" placeholder="Ej: 2">
                 </div>
             </div>
+
             <div class="form-group">
                 <label for="prodObservaciones">Observaciones</label>
                 <textarea id="prodObservaciones" rows="2"></textarea>
             </div>
+
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="cerrarModalProducto()">
-                    Cancelar
-                </button>
-                <button class="btn btn-success" onclick="confirmarProducto()">
-                    ✅ Agregar Producto
+                <button class="btn btn-secondary" onclick="cerrarModalProducto()">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmarProducto()">
+                    ✅ Agregar
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- ============================================================
+         MODAL: Ver detalle de recepción
+         ============================================================ -->
     <div class="modal-overlay" id="modalDetalle">
-        <div class="modal modal-xl">
-            <h3>Detalle de Recepción</h3>
+        <div class="modal modal-xl" style="max-width:900px;">
+            <h3>📋 Detalle de Recepción</h3>
             <div id="detalleContent"></div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="cerrarModalDetalle()">
-                    Cerrar
-                </button>
-                <button class="btn btn-primary" id="btnImprimirDetalle" onclick="imprimirDetalle()">
-                    🖨️ Imprimir
-                </button>
+                <button class="btn btn-secondary" onclick="cerrarModalDetalle()">Cerrar</button>
+                <button class="btn btn-primary" onclick="imprimirDetalle()">🖨️ Imprimir</button>
             </div>
         </div>
     </div>
 
+    <!-- ============================================================
+         MODAL: Confirmar acción
+         ============================================================ -->
     <div class="modal-overlay" id="modalConfirm">
         <div class="modal">
             <h3 id="confirmTitle">Confirmar acción</h3>

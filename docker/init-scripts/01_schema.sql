@@ -144,7 +144,7 @@ VALUES
     -- RUT 22.333.444 → DV = 5  ✅
     ('22.333.444-5', 
      'María González',
-     'maria.gonzalez@dsm-santacruz.cl',
+     'aylinesanchez1234@gmail.com',
      '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      2, NULL, TRUE),
     
@@ -152,14 +152,14 @@ VALUES
     ('23.444.555-6', 
      'Pedro Ramírez',
      'pedro.ramirez@dsm-santacruz.cl',
-     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/3KZ5u',
+     '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      2, NULL, TRUE),
     
     -- RUT 24.555.666 → DV = 7  ✅
     ('24.555.666-7', 
      'Camila Soto',
      'camila.soto@dsm-santacruz.cl',
-     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/3KZ5u',
+     '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      2, NULL, TRUE);
 
 -- ---- 3. AUDITOR / NT 226 (1 usuario) ----
@@ -169,8 +169,8 @@ INSERT INTO usuarios
 VALUES
     ('11.222.333-4', 
      'Giulia Aguilar',
-     'giulia.aguilar@dsm-santacruz.cl',
-     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/3KZ5u',
+     'ayline0701s@gmail.com',
+     '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      3, NULL, TRUE);
 
 -- ---- 4. ENCARGADO DE DEPENDENCIA (relativo) ----
@@ -181,36 +181,36 @@ VALUES
     -- RUT 15.111.222 → DV = 3  ✅
     ('15.111.222-3', 
      'Ana Muñoz',
-     'ana.munoz@dsm-santacruz.cl',
-     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/3KZ5u',
+     'asanchez17@alumnos.utalca.cl',
+     '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      4, 'Farmacia Central', FALSE),
     
     -- RUT 16.222.333 → DV = 4  ✅
     ('16.222.333-4', 
      'Luis Herrera',
      'luis.herrera@dsm-santacruz.cl',
-     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/3KZ5u',
+     '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      4, 'SAR Santa Cruz', FALSE),
     
     -- RUT 17.333.444 → DV = 5  ✅
     ('17.333.444-5', 
      'Patricia Vega',
      'patricia.vega@dsm-santacruz.cl',
-     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/3KZ5u',
+     '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      4, 'Dental CESFAM', FALSE),
     
     -- RUT 18.444.555 → DV = 6  ✅
     ('18.444.555-6', 
      'Roberto Díaz',
      'roberto.diaz@dsm-santacruz.cl',
-     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/3KZ5u',
+     '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      4, 'Vacunatorio', FALSE),
     
     -- RUT 19.555.666 → DV = 7  ✅
     ('19.555.666-7', 
      'Sandra Rojas',
      'sandra.rojas@dsm-santacruz.cl',
-     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/3KZ5u',
+     '$2a$12$VCNWCLFt6K7OjAdyD6bEc.yPZysasAdvuMiXWhJ67B2oE8BNAMDMe',
      4, 'Laboratorio', FALSE);
 
 -- ============================================================

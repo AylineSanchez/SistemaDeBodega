@@ -11,77 +11,38 @@
 <body>
 <div class="app-container">
     <header id="app-header"></header>
-    
+
     <div class="main-layout">
         <nav id="app-sidebar"></nav>
-        
+
         <main class="app-main">
             <div class="card-header">
                 <h2 class="page-title">⚙️ Configuración del Sistema</h2>
             </div>
-            
-            <div class="card" style="max-width:800px;">
-                <h3 style="margin-bottom:20px;color:#2c3e50;">Información del Sistema</h3>
-                
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:25px;">
-                    <div>
-                        <label style="font-weight:600;font-size:0.85em;color:#555;">Institución</label>
-                        <input type="text" value="Ilustre Municipalidad de Santa Cruz" 
-                               style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;" readonly>
-                    </div>
-                    <div>
-                        <label style="font-weight:600;font-size:0.85em;color:#555;">Unidad</label>
-                        <input type="text" value="Dirección de Salud Municipal - Bodega" 
-                               style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;" readonly>
-                    </div>
+
+            <div class="card" style="max-width:900px;">
+                <div id="configForm">
+                    <p style="text-align:center;color:#95a5a6;padding:40px;">Cargando configuración...</p>
                 </div>
-                
-                <h3 style="margin-bottom:20px;color:#2c3e50;">Parámetros Operativos</h3>
-                
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:25px;">
-                    <div>
-                        <label style="font-weight:600;font-size:0.85em;color:#555;">Días alerta vencimiento crítico</label>
-                        <input type="number" value="120" 
-                               style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
-                    </div>
-                    <div>
-                        <label style="font-weight:600;font-size:0.85em;color:#555;">Días alerta vencimiento próximo</label>
-                        <input type="number" value="180" 
-                               style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
-                    </div>
-                    <div>
-                        <label style="font-weight:600;font-size:0.85em;color:#555;">Días alerta vencimiento vigilar</label>
-                        <input type="number" value="365" 
-                               style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
-                    </div>
-                    <div>
-                        <label style="font-weight:600;font-size:0.85em;color:#555;">Timeout sesión (minutos)</label>
-                        <input type="number" value="15" 
-                               style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
-                    </div>
-                </div>
-                
-                <div style="padding:15px;background:#fef9e7;border-left:4px solid #f39c12;border-radius:8px;margin-bottom:20px;">
-                    <strong style="color:#7d6608;">ℹ️ Nota:</strong>
-                    <p style="margin-top:5px;color:#7d6608;font-size:0.9em;">
-                        Los parámetros de configuración son de solo lectura por ahora. 
-                        Contacte al administrador del sistema para modificarlos.
-                    </p>
-                </div>
-                
+            </div>
+
+            <div style="margin-top:20px;">
                 <button class="btn btn-secondary" onclick="window.location.href='/dashboard.html'">
                     ← Volver al Dashboard
                 </button>
             </div>
         </main>
     </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
 </div>
 
+<script src="/js/utils.js"></script>
 <script src="/js/toast.js"></script>
 <script src="/js/session-helper.js"></script>
 <script src="/js/layout.js"></script>
-<script>
-    Layout.init('config');
-</script>
+<script src="/js/configuracion.js"></script>
 </body>
 </html>

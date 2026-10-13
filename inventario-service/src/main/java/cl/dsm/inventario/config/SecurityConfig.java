@@ -152,7 +152,11 @@ public class SecurityConfig {
                 //     Todos los roles autenticados
                 // ============================================================
                 .requestMatchers("/api/qr/**").authenticated()
-                
+
+                // Configuración: lectura para todos, escritura solo JEFATURA
+                .requestMatchers(HttpMethod.GET, "/api/configuracion/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/configuracion/**").hasRole("JEFATURA")
+                                
                 // ============================================================
                 // 11. CUALQUIER OTRA API → autenticado
                 // ============================================================

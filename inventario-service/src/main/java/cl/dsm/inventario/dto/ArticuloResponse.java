@@ -5,26 +5,27 @@ import cl.dsm.inventario.entity.StockPorBodega;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class ArticuloResponse {
-    
+
     private Long id;
     private String sku;
     private String nombreTecnico;
     private String presentacion;
     private String concentracion;
-    
+
     private Integer categoriaId;
     private String categoriaCodigo;
     private String categoriaNombre;
     private String categoriaColor;
-    
+
     private String subcategoria;
     private String descripcion;
-    
+
     private String unidadMedidaBase;
     private String unidadCompra;
     private Integer factorConversion;
@@ -32,20 +33,20 @@ public class ArticuloResponse {
     private Integer stockMaximo;
     private Integer stockSeguridad;
     private Integer puntoReorden;
-    
+
     private Boolean requiereLote;
     private Boolean requiereVencimiento;
     private String registroIsp;
     private Boolean esDispositivoMedico;
     private Boolean esInsumoCritico;
     private String condicionesAlmacenamiento;
-    
+
     private String codigoUnspsc;
     private String tipoProveedorHabitual;
     private String codigoCenabast;
     private String fabricante;
     private String paisOrigen;
-    
+
     private BigDecimal precioPromedioPonderado;
     private Boolean activo;
     private String observaciones;
@@ -53,12 +54,12 @@ public class ArticuloResponse {
     private LocalDateTime fechaActualizacion;
     private String creadoPor;
     private String actualizadoPor;
-    
+
     private Integer stockTotal;
     private String estadoStock;
     private Integer bodegasCount;
     private List<StockBodegaDTO> stocks;
-    
+
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
     public static class StockBodegaDTO {
         private Long id;
@@ -70,13 +71,18 @@ public class ArticuloResponse {
         private String ubicacionFisica;
         private String estante;
         private String nivel;
-        private String codigoQr;    // ← NUEVO
+        private String codigoQr;
         private Boolean activo;
+
+        private Long loteId;
+        private String numeroLote;
+        private LocalDate fechaVencimiento;
+        private Boolean bloqueado;
     }
-    
+
     public static ArticuloResponse from(Articulo a, List<StockPorBodega> stocks, Integer stockTotal) {
         String estado = calcularEstado(stockTotal, a.getStockMinimo());
-        
+
         List<StockBodegaDTO> stocksDTO = stocks == null ? List.of() : stocks.stream()
                 .map(s -> StockBodegaDTO.builder()
                         .id(s.getId())
@@ -88,11 +94,11 @@ public class ArticuloResponse {
                         .ubicacionFisica(s.getUbicacionFisica())
                         .estante(s.getEstante())
                         .nivel(s.getNivel())
-                        .codigoQr(s.getCodigoQr())     // ← NUEVO
+                        .codigoQr(s.getCodigoQr())
                         .activo(s.getActivo())
                         .build())
                 .toList();
-        
+
         return ArticuloResponse.builder()
                 .id(a.getId())
                 .sku(a.getSku())
@@ -136,7 +142,7 @@ public class ArticuloResponse {
                 .bodegasCount(stocksDTO.size())
                 .build();
     }
-    
+
     private static String calcularEstado(Integer stock, Integer minimo) {
         if (stock == null) stock = 0;
         if (minimo == null) minimo = 0;

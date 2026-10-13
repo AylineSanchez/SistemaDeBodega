@@ -15,7 +15,8 @@ const Layout = {
             icon: '🏠', 
             label: 'Dashboard',          
             href: '/dashboard.html',    
-            roles: ['JEFATURA', 'OPERATIVO', 'AUDITOR', 'ENCARGADO_DEPENDENCIA'] 
+            // ⚡ Encargado Dependencia NO ve el Dashboard
+            roles: ['JEFATURA', 'OPERATIVO', 'AUDITOR'] 
         },
         { 
             id: 'recepcion',    
@@ -27,16 +28,21 @@ const Layout = {
         { 
             id: 'despacho',     
             icon: '📤', 
-            label: 'Despacho',           
+            label: 'Despacho',           // ⚡ Este label se cambia dinámicamente según el rol
             href: '/despacho.html',     
-            roles: ['JEFATURA', 'OPERATIVO', 'ENCARGADO_DEPENDENCIA'] 
+            roles: ['JEFATURA', 'OPERATIVO', 'ENCARGADO_DEPENDENCIA'],
+            // ⚡ Label alternativo para Enc. Dependencia
+            labelPorRol: {
+                'ENCARGADO_DEPENDENCIA': 'Pedidos'
+            }
         },
         { 
             id: 'inventario',   
             icon: '📦', 
             label: 'Inventario',         
             href: '/articulos.html',    
-            roles: ['JEFATURA', 'OPERATIVO', 'AUDITOR'] 
+            // ⚡ Enc. Dependencia puede ver el catálogo (solo lectura)
+            roles: ['JEFATURA', 'OPERATIVO', 'AUDITOR', 'ENCARGADO_DEPENDENCIA']
         },
         { 
             id: 'trazabilidad', 
@@ -122,14 +128,21 @@ const Layout = {
         
         sidebar.innerHTML = `
             <ul class="sidebar-menu">
-                ${itemsPermitidos.map(item => `
-                    <li class="${item.id === paginaActiva ? 'active' : ''}"
-                        onclick="window.location.href='${item.href}'"
-                        title="${item.label}">
-                        <span class="menu-icon">${item.icon}</span>
-                        <span class="menu-label">${item.label}</span>
-                    </li>
-                `).join('')}
+                ${itemsPermitidos.map(item => {
+                    // ⚡ Usar label específico por rol si existe
+                    const label = (item.labelPorRol && item.labelPorRol[rol]) 
+                        ? item.labelPorRol[rol] 
+                        : item.label;
+                    
+                    return `
+                        <li class="${item.id === paginaActiva ? 'active' : ''}"
+                            onclick="window.location.href='${item.href}'"
+                            title="${label}">
+                            <span class="menu-icon">${item.icon}</span>
+                            <span class="menu-label">${label}</span>
+                        </li>
+                    `;
+                }).join('')}
             </ul>
         `;
     },

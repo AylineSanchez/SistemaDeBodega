@@ -10,6 +10,11 @@ Layout.init('inventario');
 const token = window.getToken();
 const usuario = window.getUsuario();
 
+// ⚡ Permisos según rol
+const puedeEditar = ['JEFATURA', 'OPERATIVO'].includes(usuario.rol);
+const puedeVerQr = ['JEFATURA', 'OPERATIVO', 'AUDITOR'].includes(usuario.rol);
+const esEncargadoDependencia = usuario.rol === 'ENCARGADO_DEPENDENCIA';
+
 let state = {
     page: 0,
     size: 20,
@@ -19,7 +24,7 @@ let state = {
     categoriaId: '',
     bodegaId: '',
     estado: '',
-    incluirInactivos: false
+    ordenStock: null  // null | 'asc' | 'desc'
 };
 
 let categorias = [];
@@ -30,6 +35,18 @@ let qrsArticuloActual = null;
    INICIALIZACIÓN
    ============================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
+    // ⚡ Ocultar botones de "Nuevo Artículo" e "Importar Excel" para Enc. Dependencia
+    if (esEncargadoDependencia) {
+        const btnImportar = document.querySelector('button[onclick="abrirImportador()"]');
+        const btnNuevo = document.querySelector('a[href="/articulo-form.html"]');
+        if (btnImportar) btnImportar.style.display = 'none';
+        if (btnNuevo) btnNuevo.style.display = 'none';
+
+        // Ajustar título
+        const titulo = document.querySelector('.page-title');
+        if (titulo) titulo.textContent = '📦 Catálogo de Artículos Disponibles';
+    }
+
     await cargarCategorias();
     await cargarBodegas();
     await cargarArticulos();
@@ -53,17 +70,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         cargarArticulos();
     });
 
-    document.getElementById('estadoFilter').addEventListener('change', (e) => {
-        state.estado = e.target.value;
-        state.page = 0;
-        cargarArticulos();
-    });
-
-    document.getElementById('incluirInactivos').addEventListener('change', (e) => {
-        state.incluirInactivos = e.target.checked;
-        state.page = 0;
-        cargarArticulos();
-    });
+    // ⚡ El filtro de estado solo es útil para JEFATURA/OPERATIVO/AUDITOR
+    if (!esEncargadoDependencia) {
+        document.getElementById('estadoFilter').addEventListener('change', (e) => {
+            state.estado = e.target.value;
+            state.page = 0;
+            cargarArticulos();
+        });
+    } else {
+        // Ocultar el filtro de estado para Enc. Dependencia
+        const estadoFilter = document.getElementById('estadoFilter');
+        if (estadoFilter) {
+            estadoFilter.style.display = 'none';
+        }
+    }
 
     // Tamaño de página
     document.getElementById('pageSize').addEventListener('change', (e) => {
@@ -123,6 +143,34 @@ async function cargarBodegas() {
 }
 
 /* ============================================================
+   ORDENAMIENTO POR STOCK
+   ============================================================ */
+function toggleOrdenStock() {
+    if (state.ordenStock === null) {
+        state.ordenStock = 'asc';
+    } else if (state.ordenStock === 'asc') {
+        state.ordenStock = 'desc';
+    } else {
+        state.ordenStock = null;
+    }
+
+    const icono = document.getElementById('sortIconStock');
+    if (icono) {
+        icono.classList.toggle('active', state.ordenStock !== null);
+        if (state.ordenStock === 'asc') {
+            icono.textContent = '↑';
+        } else if (state.ordenStock === 'desc') {
+            icono.textContent = '↓';
+        } else {
+            icono.textContent = '⇅';
+        }
+    }
+
+    state.page = 0;
+    cargarArticulos();
+}
+
+/* ============================================================
    CARGA DE ARTÍCULOS
    ============================================================ */
 async function cargarArticulos() {
@@ -130,13 +178,14 @@ async function cargarArticulos() {
     try {
         const params = new URLSearchParams({
             page: state.page,
-            size: state.size,
-            incluirInactivos: state.incluirInactivos
+            size: state.size
         });
+
         if (state.q) params.append('q', state.q);
         if (state.categoriaId) params.append('categoriaId', state.categoriaId);
-        if (state.bodegaId) params.append('bodegaId', state.bodegaId);   // ⚡ Nuevo: enviar al backend
-        if (state.estado) params.append('estadoStock', state.estado);   // ⚡ Nuevo: enviar al backend
+        if (state.bodegaId) params.append('bodegaId', state.bodegaId);
+        if (state.estado) params.append('estadoStock', state.estado);
+        if (state.ordenStock) params.append('ordenStock', state.ordenStock.toUpperCase());
 
         const res = await fetch(`${API}/articulos?${params}`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -174,6 +223,11 @@ async function cargarArticulos() {
 function renderizarTabla(articulos) {
     const tbody = document.getElementById('tablaBody');
 
+    // ⚡ Filtrar artículos en quiebre para Enc. Dependencia
+    if (esEncargadoDependencia) {
+        articulos = articulos.filter(a => (a.stockTotal || 0) > 0);
+    }
+
     if (!articulos || articulos.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -181,7 +235,7 @@ function renderizarTabla(articulos) {
                     <div class="empty-state">
                         <div class="icon">📭</div>
                         <h3>No hay artículos</h3>
-                        <p>Prueba con otros filtros o agrega un nuevo artículo.</p>
+                        <p>Prueba con otros filtros.</p>
                     </div>
                 </td>
             </tr>
@@ -192,6 +246,28 @@ function renderizarTabla(articulos) {
     tbody.innerHTML = articulos.map(a => {
         const stockClass = getStockClass(a.estadoStock);
         const estadoBadge = getEstadoBadge(a.estadoStock);
+
+        // ⚡ Acciones según rol
+        let accionesHtml = `<button class="btn-icon view" title="Ver detalle"
+                            onclick="verDetalle(${a.id})">👁️</button>`;
+
+        if (puedeEditar) {
+            accionesHtml += `
+                ${a.bodegasCount > 0
+                    ? `<button class="btn-icon qr" title="Ver códigos QR"
+                               onclick="verQrs(${a.id}, '${escapeAttr(a.nombreTecnico)}')">🔳</button>`
+                    : ''
+                }
+                <button class="btn-icon edit" title="Editar"
+                        onclick="editar(${a.id})">✏️</button>
+                ${a.activo
+                    ? `<button class="btn-icon delete" title="Desactivar"
+                               onclick="desactivar(${a.id}, '${escapeAttr(a.nombreTecnico)}')">🗑️</button>`
+                    : `<button class="btn-icon" title="Reactivar" style="color:#27ae60;"
+                               onclick="reactivar(${a.id})">♻️</button>`
+                }
+            `;
+        }
 
         return `
             <tr>
@@ -212,7 +288,9 @@ function renderizarTabla(articulos) {
                         <span class="stock-unit">${formatUnidad(a.unidadMedidaBase)}</span>
                     </div>
                     <div class="stock-range">
-                        Mín ${a.stockMinimo} · Máx ${a.stockMaximo || '∞'}
+                        ${puedeEditar
+                            ? `Mín ${a.stockMinimo} · Máx ${a.stockMaximo || '∞'}`
+                            : ''}
                     </div>
                 </td>
                 <td>${estadoBadge}</td>
@@ -222,21 +300,7 @@ function renderizarTabla(articulos) {
                         : '<span style="color:#95a5a6;">—</span>'}
                 </td>
                 <td class="actions-cell">
-                    <button class="btn-icon view" title="Ver detalle"
-                            onclick="verDetalle(${a.id})">👁️</button>
-                    ${a.bodegasCount > 0
-                        ? `<button class="btn-icon qr" title="Ver códigos QR"
-                                   onclick="verQrs(${a.id}, '${escapeAttr(a.nombreTecnico)}')">🔳</button>`
-                        : ''
-                    }
-                    <button class="btn-icon edit" title="Editar"
-                            onclick="editar(${a.id})">✏️</button>
-                    ${a.activo
-                        ? `<button class="btn-icon delete" title="Desactivar"
-                                   onclick="desactivar(${a.id}, '${escapeAttr(a.nombreTecnico)}')">🗑️</button>`
-                        : `<button class="btn-icon" title="Reactivar" style="color:#27ae60;"
-                                   onclick="reactivar(${a.id})">♻️</button>`
-                    }
+                    ${accionesHtml}
                 </td>
             </tr>
         `;
@@ -264,7 +328,7 @@ function getEstadoBadge(estado) {
 }
 
 /* ============================================================
-   PAGINACIÓN MEJORADA
+   PAGINACIÓN
    ============================================================ */
 function renderizarPaginacion() {
     const info = document.getElementById('paginationInfo');
@@ -284,49 +348,28 @@ function renderizarPaginacion() {
     }
 
     let html = '';
+    html += `<button ${current === 0 ? 'disabled' : ''} onclick="cambiarPagina(0)" title="Primera página">«</button>`;
+    html += `<button ${current === 0 ? 'disabled' : ''} onclick="cambiarPagina(${current - 1})" title="Página anterior">◀</button>`;
 
-    // Botón primera página
-    html += `<button ${current === 0 ? 'disabled' : ''}
-                     onclick="cambiarPagina(0)"
-                     title="Primera página">«</button>`;
-
-    // Botón anterior
-    html += `<button ${current === 0 ? 'disabled' : ''}
-                     onclick="cambiarPagina(${current - 1})"
-                     title="Página anterior">◀</button>`;
-
-    // Números de página (máx 5 visibles)
     let start = Math.max(0, current - 2);
     let end = Math.min(totalPages - 1, current + 2);
 
     if (start > 0) {
         html += `<button onclick="cambiarPagina(0)">1</button>`;
-        if (start > 1) {
-            html += `<button class="ellipsis">…</button>`;
-        }
+        if (start > 1) html += `<button class="ellipsis">…</button>`;
     }
 
     for (let i = start; i <= end; i++) {
-        html += `<button class="${i === current ? 'active' : ''}"
-                         onclick="cambiarPagina(${i})">${i + 1}</button>`;
+        html += `<button class="${i === current ? 'active' : ''}" onclick="cambiarPagina(${i})">${i + 1}</button>`;
     }
 
     if (end < totalPages - 1) {
-        if (end < totalPages - 2) {
-            html += `<button class="ellipsis">…</button>`;
-        }
+        if (end < totalPages - 2) html += `<button class="ellipsis">…</button>`;
         html += `<button onclick="cambiarPagina(${totalPages - 1})">${totalPages}</button>`;
     }
 
-    // Botón siguiente
-    html += `<button ${current >= totalPages - 1 ? 'disabled' : ''}
-                     onclick="cambiarPagina(${current + 1})"
-                     title="Página siguiente">▶</button>`;
-
-    // Botón última página
-    html += `<button ${current >= totalPages - 1 ? 'disabled' : ''}
-                     onclick="cambiarPagina(${totalPages - 1})"
-                     title="Última página">»</button>`;
+    html += `<button ${current >= totalPages - 1 ? 'disabled' : ''} onclick="cambiarPagina(${current + 1})" title="Página siguiente">▶</button>`;
+    html += `<button ${current >= totalPages - 1 ? 'disabled' : ''} onclick="cambiarPagina(${totalPages - 1})" title="Última página">»</button>`;
 
     botones.innerHTML = html;
 }
@@ -397,22 +440,26 @@ function limpiarFiltros() {
     document.getElementById('searchInput').value = '';
     document.getElementById('categoriaFilter').value = '';
     document.getElementById('bodegaFilter').value = '';
-    document.getElementById('estadoFilter').value = '';
-    document.getElementById('incluirInactivos').checked = false;
+
+    const estadoFilter = document.getElementById('estadoFilter');
+    if (estadoFilter) estadoFilter.value = '';
 
     state.q = '';
     state.categoriaId = '';
     state.bodegaId = '';
     state.estado = '';
-    state.incluirInactivos = false;
+    state.ordenStock = null;
     state.page = 0;
+
+    const icono = document.getElementById('sortIconStock');
+    if (icono) {
+        icono.textContent = '⇅';
+        icono.classList.remove('active');
+    }
 
     cargarArticulos();
 }
 
-/* ============================================================
-   QR - VER Y GENERAR
-   ============================================================ */
 /* ============================================================
    QR - VER Y GENERAR
    ============================================================ */
@@ -457,25 +504,17 @@ async function verQrs(articuloId, nombreArticulo) {
                     ${data.data.map(qr => `
                         <div class="qr-item-modal">
                             <span class="qr-bodega-badge">${escapeHtml(qr.bodegaCodigo)}</span>
-
                             <div class="qr-image-wrapper">
                                 <img src="${qr.qrImageUrl}?token=${encodeURIComponent(token)}"
                                      alt="QR ${escapeHtml(qr.codigoQr)}"
                                      loading="lazy">
                             </div>
-
                             <div class="qr-nombre">${escapeHtml(qr.nombreArticulo)}</div>
-
-                            <div class="qr-bodega-info">
-                                ${escapeHtml(qr.bodegaNombre)}
-                            </div>
-
+                            <div class="qr-bodega-info">${escapeHtml(qr.bodegaNombre)}</div>
                             <div class="qr-codigo">${escapeHtml(qr.codigoQr)}</div>
-
                             <div class="qr-stock-info">
                                 Stock: <strong>${qr.stockActual}</strong> ${formatUnidad(qr.unidadMedida)}
                             </div>
-
                             ${qr.ubicacionFisica
                                 ? `<div class="qr-ubicacion">📍 ${escapeHtml(qr.ubicacionFisica)}</div>`
                                 : ''}
@@ -554,14 +593,11 @@ async function importarExcel() {
         }
 
         const r = data.data;
-
         let resumen = `✅ ${r.importados} artículos importados\n`;
         if (r.duplicados > 0) resumen += `⚠️ ${r.duplicados} duplicados (omitidos)\n`;
         if (r.errores && r.errores.length > 0) resumen += `❌ ${r.errores.length} errores`;
 
         Toast.success(resumen, '✓ Importación completada');
-
-        console.log('📊 Detalle de importación:', r);
 
         cerrarImportador();
         cargarArticulos();
@@ -600,4 +636,47 @@ function cerrarConfirm() {
    ============================================================ */
 function mostrarLoading(show) {
     document.getElementById('loadingOverlay').classList.toggle('active', show);
+}
+
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeAttr(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatUnidad(unidad) {
+    if (!unidad) return 'unidades';
+    const map = {
+        'UNIDAD': 'unidad', 'UNIDADES': 'unidades',
+        'CAJA': 'caja', 'CAJAS': 'cajas',
+        'PAQUETE': 'paquete', 'PAQUETES': 'paquetes',
+        'BOLSA': 'bolsa', 'BOLSAS': 'bolsas',
+        'FRASCO': 'frasco', 'FRASCOS': 'frascos',
+        'KILO': 'kilo', 'KILOS': 'kilos'
+    };
+    return map[unidad.toUpperCase()] || unidad.toLowerCase();
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }

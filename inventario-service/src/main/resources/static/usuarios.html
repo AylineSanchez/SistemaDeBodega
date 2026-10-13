@@ -7,30 +7,329 @@
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/css/toast.css">
     <link rel="stylesheet" href="/css/bodega.css">
+    <style>
+        /* ============================================================
+           ESTILOS ESPECÍFICOS DE GESTIÓN DE USUARIOS
+           ============================================================ */
+
+        /* ---------- Modal de usuario (más ancho y con secciones) ---------- */
+        #modalForm .modal {
+            max-width: 680px !important;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .modal-header-custom {
+            padding: 22px 30px 18px;
+            border-bottom: 2px solid #f0ebe0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #faf9f7;
+        }
+
+        .modal-header-custom.nuevo {
+            background: linear-gradient(135deg, #fef5e7, #fdebd0);
+            border-bottom-color: #f5cba7;
+        }
+
+        .modal-header-custom.editar {
+            background: linear-gradient(135deg, #ebf5fb, #d6eaf8);
+            border-bottom-color: #a9cce3;
+        }
+
+        .modal-header-custom h3 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-header-custom .header-icon {
+            font-size: 1.3em;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.4em;
+            color: #95a5a6;
+            padding: 4px 10px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+
+        .modal-close-btn:hover {
+            background: rgba(0,0,0,0.06);
+            color: #2c3e50;
+        }
+
+        .modal-body-custom {
+            padding: 25px 30px 10px;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer-custom {
+            padding: 18px 30px 22px;
+            border-top: 2px solid #f0ebe0;
+            background: #faf9f7;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ---------- Secciones del formulario ---------- */
+        .form-section {
+            margin-bottom: 22px;
+        }
+
+        .form-section-title {
+            font-size: 0.78em;
+            font-weight: 800;
+            color: #95a5a6;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #e0d9ce;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-section-title::before {
+            content: '';
+            width: 4px;
+            height: 12px;
+            background: #e67e22;
+            border-radius: 2px;
+        }
+
+        /* ---------- Grid de campos ---------- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* ---------- Campo individual ---------- */
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field label {
+            font-weight: 600;
+            font-size: 0.83em;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .field label .required {
+            color: #e74c3c;
+            font-weight: 800;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid #e0d9ce;
+            border-radius: 10px;
+            font-size: 0.95em;
+            background: #faf9f7;
+            color: #2c3e50;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            border-color: #e67e22;
+            outline: none;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(230, 126, 34, 0.12);
+        }
+
+        .field input:disabled,
+        .field select:disabled {
+            background: #f0ebe0;
+            color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Estados de validación */
+        .field.valid input,
+        .field.valid select {
+            border-color: #27ae60;
+            background: #f0fdf4;
+        }
+
+        .field.valid input:focus,
+        .field.valid select:focus {
+            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.12);
+        }
+
+        .field.invalid input,
+        .field.invalid select {
+            border-color: #e74c3c;
+            background: #fef2f2;
+        }
+
+        .field.invalid input:focus,
+        .field.invalid select:focus {
+            box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.12);
+        }
+
+        .field-hint {
+            font-size: 0.75em;
+            color: #95a5a6;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            line-height: 1.3;
+        }
+
+        .field-hint.error {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .field-hint.success {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        /* Rol info box (debajo del select de rol) */
+        .rol-info {
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.78em;
+            line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .rol-info.jefatura   { background: #fadbd8; color: #922b21; }
+        .rol-info.operativo  { background: #d6eaf8; color: #1a5490; }
+        .rol-info.auditor    { background: #ebdef0; color: #6c3483; }
+        .rol-info.encargado  { background: #d1f2eb; color: #148f77; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---------- Spinner dentro del botón ---------- */
+        .btn .btn-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2.5px solid rgba(255,255,255,0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: btn-spin 0.7s linear infinite;
+            margin-right: 6px;
+        }
+
+        @keyframes btn-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ---------- Badges de rol y estado (más bonitos) ---------- */
+        .badge-rol {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.72em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            border: none;
+        }
+
+        .badge-estado {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* ---------- Tabla de usuarios (mejoras) ---------- */
+        .product-table td .sku-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #d35400;
+            font-size: 0.85em;
+        }
+
+        .product-table td .name-cell {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .modal-body-custom {
+                padding: 20px 20px 10px;
+            }
+            .modal-header-custom,
+            .modal-footer-custom {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="app-container">
-    
+
     <header id="app-header"></header>
-    
+
     <div class="main-layout">
-        
+
         <nav id="app-sidebar"></nav>
-        
+
         <main class="app-main">
-            
+
             <div class="card-header">
                 <h2 class="page-title">👥 Gestión de Usuarios</h2>
                 <button class="btn btn-primary" onclick="abrirFormulario()">
                     ➕ Nuevo Usuario
                 </button>
             </div>
-            
+
             <!-- Barra de filtros -->
             <div class="search-bar">
                 <input type="text" id="searchInput" class="search-input"
                        placeholder="🔍 Buscar por RUT, nombre o email...">
-                
+
                 <select id="rolFilter" class="filter-select">
                     <option value="">Todos los roles</option>
                     <option value="JEFATURA">Jefatura</option>
@@ -38,19 +337,19 @@
                     <option value="AUDITOR">Auditor NT 226</option>
                     <option value="ENCARGADO_DEPENDENCIA">Encargado Dependencia</option>
                 </select>
-                
+
                 <select id="estadoFilter" class="filter-select">
                     <option value="">Todos los estados</option>
-                    <option value="ACTIVO">Activos</option>
-                    <option value="INACTIVO">Inactivos</option>
-                    <option value="BLOQUEADO">Bloqueados</option>
+                    <option value="ACTIVO">✅ Activos</option>
+                    <option value="INACTIVO">⚪ Inactivos</option>
+                    <option value="BLOQUEADO">⚠️ Bloqueados</option>
                 </select>
-                
+
                 <button class="btn btn-secondary" onclick="limpiarFiltros()">
                     🔄 Limpiar
                 </button>
             </div>
-            
+
             <!-- Tabla -->
             <div class="table-container">
                 <table class="product-table">
@@ -69,7 +368,7 @@
                     <tbody id="tablaBody"></tbody>
                 </table>
             </div>
-            
+
             <!-- Leyenda de roles -->
             <div class="roles-legend">
                 <div class="legend-item">
@@ -89,81 +388,132 @@
                     <span class="legend-desc">Solo lectura y pedidos</span>
                 </div>
             </div>
-            
+
         </main>
     </div>
-    
+
     <!-- Loading -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
-    
-    <!-- Modal Formulario -->
+
+    <!-- Modal Formulario (REDISEÑADO) -->
     <div class="modal-overlay" id="modalForm">
-        <div class="modal" style="max-width:600px;">
-            <h3 id="modalFormTitle">Nuevo Usuario</h3>
-            
+        <div class="modal">
+            <div class="modal-header-custom" id="modalFormHeader">
+                <h3>
+                    <span class="header-icon" id="modalFormIcon">➕</span>
+                    <span id="modalFormTitle">Nuevo Usuario</span>
+                </h3>
+                <button type="button" class="modal-close-btn" onclick="cerrarFormulario()"
+                        aria-label="Cerrar">✕</button>
+            </div>
+
             <form id="formUsuario" autocomplete="off">
                 <input type="hidden" id="usuarioId">
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="rut">RUT <span class="required">*</span></label>
-                        <input type="text" id="rut" placeholder="12.345.678-5" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="rol">Rol <span class="required">*</span></label>
-                        <select id="rol" required onchange="toggleDependencia()">
-                            <option value="">Seleccione un rol</option>
-                            <option value="JEFATURA">Jefatura</option>
-                            <option value="OPERATIVO">Operativo</option>
-                            <option value="AUDITOR">Auditor NT 226</option>
-                            <option value="ENCARGADO_DEPENDENCIA">Encargado Dependencia</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="nombreCompleto">Nombre Completo <span class="required">*</span></label>
-                        <input type="text" id="nombreCompleto" placeholder="Nombre y apellidos" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email <span class="required">*</span></label>
-                        <input type="email" id="email" placeholder="usuario@dsm.cl" required>
-                    </div>
-                </div>
-                
-                <div class="form-row" id="dependenciaRow" style="display:none;">
-                    <div class="form-group" style="grid-column:1/-1;">
-                        <label for="dependencia">Dependencia</label>
-                        <select id="dependencia">
-                            <option value="">Seleccione una dependencia</option>
-                            <option value="Farmacia Central">Farmacia Central</option>
-                            <option value="SAR Santa Cruz">SAR Santa Cruz</option>
-                            <option value="Dental CESFAM">Dental CESFAM</option>
-                            <option value="Vacunatorio">Vacunatorio</option>
-                            <option value="Laboratorio">Laboratorio</option>
-                            <option value="Bodega">Bodega</option>
-                        </select>
-                        <div class="field-help">
-                            Solo aplica para el rol Encargado de Dependencia
+
+                <div class="modal-body-custom">
+
+                    <!-- SECCIÓN: Información Personal -->
+                    <div class="form-section">
+                        <div class="form-section-title">Información Personal</div>
+                        <div class="form-grid">
+                            <div class="field" id="field-rut">
+                                <label for="rut">
+                                    RUT <span class="required">*</span>
+                                </label>
+                                <input type="text" id="rut"
+                                       placeholder="12.345.678-5"
+                                       autocomplete="off" required>
+                                <div class="field-hint" id="hint-rut">
+                                    💡 Solo números, el sistema agrega puntos y guion
+                                </div>
+                            </div>
+
+                            <div class="field" id="field-nombre">
+                                <label for="nombreCompleto">
+                                    Nombre Completo <span class="required">*</span>
+                                </label>
+                                <input type="text" id="nombreCompleto"
+                                       placeholder="Juan Pérez González"
+                                       autocomplete="off" required>
+                                <div class="field-hint">
+                                    Nombre y apellidos del funcionario
+                                </div>
+                            </div>
+
+                            <div class="field full-width" id="field-email">
+                                <label for="email">
+                                    Email Institucional <span class="required">*</span>
+                                </label>
+                                <input type="email" id="email"
+                                       placeholder="usuario@dsm-santacruz.cl"
+                                       autocomplete="off" required>
+                                <div class="field-hint" id="hint-email">
+                                    Se enviarán notificaciones a este correo
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- SECCIÓN: Rol y Permisos -->
+                    <div class="form-section">
+                        <div class="form-section-title">Rol y Permisos</div>
+                        <div class="form-grid">
+                            <div class="field full-width" id="field-rol">
+                                <label for="rol">
+                                    Rol del Usuario <span class="required">*</span>
+                                </label>
+                                <select id="rol" required onchange="toggleDependencia()">
+                                    <option value="">— Seleccione un rol —</option>
+                                    <option value="JEFATURA">Jefatura / Administrador</option>
+                                    <option value="OPERATIVO">Operativo / Gestión</option>
+                                    <option value="AUDITOR">Auditor / Supervisor NT 226</option>
+                                    <option value="ENCARGADO_DEPENDENCIA">Encargado de Dependencia</option>
+                                </select>
+                                <div id="rolInfoBox"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN: Dependencia (solo para ENCARGADO_DEPENDENCIA) -->
+                    <div class="form-section" id="dependenciaSection" style="display:none;">
+                        <div class="form-section-title">Dependencia Asignada</div>
+                        <div class="form-grid">
+                            <div class="field full-width" id="field-dependencia">
+                                <label for="dependencia">
+                                    Dependencia <span class="required">*</span>
+                                </label>
+                                <select id="dependencia">
+                                    <option value="">— Seleccione una dependencia —</option>
+                                    <option value="Farmacia Central">Farmacia Central</option>
+                                    <option value="SAR Santa Cruz">SAR Santa Cruz</option>
+                                    <option value="Dental CESFAM">Dental CESFAM</option>
+                                    <option value="Vacunatorio">Vacunatorio</option>
+                                    <option value="Laboratorio">Laboratorio</option>
+                                    <option value="Bodega Central">Bodega Central</option>
+                                </select>
+                                <div class="field-hint">
+                                    Este usuario solo podrá hacer pedidos para esta dependencia
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                
-                <div class="modal-actions">
+
+                <div class="modal-footer-custom">
                     <button type="button" class="btn btn-secondary" onclick="cerrarFormulario()">
                         Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary" id="btnGuardar">
-                        💾 Guardar
+                        💾 Guardar Usuario
                     </button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <!-- Modal Confirmación -->
     <div class="modal-overlay" id="modalConfirm">
         <div class="modal">

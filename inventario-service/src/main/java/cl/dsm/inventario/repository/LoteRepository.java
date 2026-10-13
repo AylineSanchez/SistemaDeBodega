@@ -12,13 +12,13 @@ import java.util.Optional;
 
 @Repository
 public interface LoteRepository extends JpaRepository<Lote, Long> {
-    
+
     Optional<Lote> findByArticuloIdAndNumeroLote(Long articuloId, String numeroLote);
-    
+
     List<Lote> findByArticuloIdAndActivoTrue(Long articuloId);
-    
+
     List<Lote> findByBloqueadoTrueAndActivoTrue();
-    
+
     // ============================================================
     // LOTES POR VENCER (para reportes de alertas)
     // ============================================================
@@ -31,7 +31,7 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
         ORDER BY l.fechaVencimiento ASC
         """)
     List<Lote> findLotesPorVencer(@Param("fechaLimite") LocalDate fechaLimite);
-    
+
     // ============================================================
     // LOTES VENCIDOS
     // ============================================================
@@ -43,4 +43,14 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
         ORDER BY l.fechaVencimiento ASC
         """)
     List<Lote> findLotesVencidos();
+
+    // ============================================================
+    // ⚡ NUEVO: Stock total de un lote (suma de todas las bodegas)
+    // ============================================================
+    @Query("""
+        SELECT COALESCE(SUM(sl.cantidad), 0) 
+        FROM StockLote sl 
+        WHERE sl.lote.id = :loteId
+        """)
+    Integer getStockTotalLote(@Param("loteId") Long loteId);
 }

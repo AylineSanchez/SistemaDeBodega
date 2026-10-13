@@ -2,7 +2,7 @@
 -- MÓDULO 8: REPORTES
 -- Sistema de Gestión Integral de Bodega - DSM Santa Cruz
 -- Cubre: RF-075 a RF-085
---
+
 -- Este script NO crea tablas nuevas (los datos ya están en las tablas
 -- anteriores). Solo crea VISTAS y FUNCIONES para generar reportes.
 -- ============================================================
@@ -15,14 +15,14 @@ CREATE TABLE reportes_generados (
     tipo_reporte             VARCHAR(50)  NOT NULL,
     -- ALERTAS_VENCIMIENTO | ALERTAS_STOCK | MERMAS_BAJAS | CONSUMO_CENTRO_COSTO
     -- KARDEX | LOG_AUDITORIA | VALORIZACION | TASA_MERMA | CUMPLIMIENTO_OC
-    
+
     parametros               JSONB,                          -- filtros usados
     formato                  VARCHAR(20)  NOT NULL DEFAULT 'JSON',   -- JSON | PDF | EXCEL
-    
+
     -- Resultado
     total_registros          INTEGER      DEFAULT 0,
     archivo_url              VARCHAR(500),                   -- URL del archivo generado
-    
+
     -- Quién lo generó
     generado_por_rut         VARCHAR(12),
     generado_por_nombre      VARCHAR(150),
@@ -267,36 +267,43 @@ COMMENT ON VIEW r_valorizacion_inventario IS
 
 -- ============================================================
 -- VISTA: Reporte de Tasa de Merma Mensual (RF-082)
+-- ⚡ CORREGIDO: Se separó en dos CTEs para evitar el error
+--    "subquery uses ungrouped column" de PostgreSQL.
 -- ============================================================
 CREATE OR REPLACE VIEW r_tasa_merma AS
+WITH mermas_por_mes AS (
+    SELECT 
+        DATE_TRUNC('month', k.fecha_movimiento) AS mes,
+        COUNT(DISTINCT k.articulo_id)           AS articulos_afectados,
+        SUM(k.cantidad)                         AS cantidad_total_merma,
+        SUM(k.valor_total)                      AS valor_total_merma
+    FROM kardex k
+    WHERE k.tipo_movimiento IN ('MERMA_VENCIMIENTO', 'MERMA_DAÑO', 'MERMA_OBSOLESCENCIA')
+    GROUP BY DATE_TRUNC('month', k.fecha_movimiento)
+),
+despachos_por_mes AS (
+    SELECT 
+        DATE_TRUNC('month', d.fecha_despacho) AS mes,
+        SUM(dd.cantidad)                       AS cantidad_total_despachada
+    FROM despacho_detalle dd
+    JOIN despachos d ON d.id = dd.despacho_id
+    WHERE d.estado = 'CONFIRMADO'
+    GROUP BY DATE_TRUNC('month', d.fecha_despacho)
+)
 SELECT 
-    DATE_TRUNC('month', k.fecha_movimiento) AS mes,
-    COUNT(DISTINCT k.articulo_id)           AS articulos_afectados,
-    SUM(k.cantidad)                         AS cantidad_total_merma,
-    SUM(k.valor_total)                      AS valor_total_merma,
-    (SELECT SUM(dd.cantidad) 
-     FROM despacho_detalle dd 
-     JOIN despachos d ON d.id = dd.despacho_id
-     WHERE DATE_TRUNC('month', d.fecha_despacho) = DATE_TRUNC('month', k.fecha_movimiento)
-       AND d.estado = 'CONFIRMADO') AS cantidad_total_despachada,
+    m.mes,
+    m.articulos_afectados,
+    m.cantidad_total_merma,
+    m.valor_total_merma,
+    COALESCE(d.cantidad_total_despachada, 0) AS cantidad_total_despachada,
     CASE 
-        WHEN (SELECT SUM(dd.cantidad) 
-              FROM despacho_detalle dd 
-              JOIN despachos d ON d.id = dd.despacho_id
-              WHERE DATE_TRUNC('month', d.fecha_despacho) = DATE_TRUNC('month', k.fecha_movimiento)
-                AND d.estado = 'CONFIRMADO') > 0
-        THEN (SUM(k.cantidad) * 100.0) / 
-             (SELECT SUM(dd.cantidad) 
-              FROM despacho_detalle dd 
-              JOIN despachos d ON d.id = dd.despacho_id
-              WHERE DATE_TRUNC('month', d.fecha_despacho) = DATE_TRUNC('month', k.fecha_movimiento)
-                AND d.estado = 'CONFIRMADO')
+        WHEN COALESCE(d.cantidad_total_despachada, 0) > 0 
+        THEN (m.cantidad_total_merma * 100.0) / d.cantidad_total_despachada
         ELSE 0
     END AS tasa_merma_porcentaje
-FROM kardex k
-WHERE k.tipo_movimiento IN ('MERMA_VENCIMIENTO', 'MERMA_DAÑO', 'MERMA_OBSOLESCENCIA')
-GROUP BY DATE_TRUNC('month', k.fecha_movimiento)
-ORDER BY mes DESC;
+FROM mermas_por_mes m
+LEFT JOIN despachos_por_mes d ON d.mes = m.mes
+ORDER BY m.mes DESC;
 
 COMMENT ON VIEW r_tasa_merma IS 
     'Reporte de tasas de merma mensual (RF-082)';
@@ -350,7 +357,7 @@ BEGIN
       AND fecha_movimiento <= p_fecha
     ORDER BY fecha_movimiento DESC, id DESC
     LIMIT 1;
-    
+
     RETURN COALESCE(v_stock, 0);
 END;
 $$ LANGUAGE plpgsql;
@@ -373,7 +380,7 @@ BEGIN
            COUNT(*)::BIGINT,
            'Total de artículos en el maestro'::VARCHAR
     FROM maestro_articulos WHERE activo = TRUE;
-    
+
     RETURN QUERY
     SELECT 'stock_critico'::VARCHAR,
            COUNT(*)::BIGINT,
@@ -386,7 +393,7 @@ BEGIN
         GROUP BY a.id, a.stock_minimo
         HAVING COALESCE(SUM(sb.stock_actual), 0) <= a.stock_minimo
     ) t;
-    
+
     RETURN QUERY
     SELECT 'quiebres_stock'::VARCHAR,
            COUNT(*)::BIGINT,
@@ -399,19 +406,19 @@ BEGIN
         GROUP BY a.id
         HAVING COALESCE(SUM(sb.stock_actual), 0) = 0
     ) t;
-    
+
     RETURN QUERY
     SELECT 'lotes_bloqueados'::VARCHAR,
            COUNT(*)::BIGINT,
            'Lotes bloqueados por ISP'::VARCHAR
     FROM lotes WHERE bloqueado = TRUE AND activo = TRUE;
-    
+
     RETURN QUERY
     SELECT 'pedidos_pendientes'::VARCHAR,
            COUNT(*)::BIGINT,
            'Pedidos internos por preparar'::VARCHAR
     FROM pedidos_internos WHERE estado IN ('PENDIENTE', 'EN_PREPARACION') AND activo = TRUE;
-    
+
     RETURN QUERY
     SELECT 'bodegas_activas'::VARCHAR,
            COUNT(*)::BIGINT,

@@ -26,7 +26,11 @@ public class ArticuloController {
 
     // ============================================================
     // LISTAR - Todos los roles autenticados
-    // ⚡ Ahora acepta filtro por bodega
+    //
+    // ⚡ Ahora acepta:
+    //   - bodegaId: filtra por bodega
+    //   - estadoStock: QUIEBRE | CRITICO | BAJO | NORMAL
+    //   - ordenStock:  ASC | DESC (por stock total)
     // ============================================================
     @GetMapping
     @PreAuthorize("hasAnyRole('JEFATURA', 'OPERATIVO', 'AUDITOR', 'ENCARGADO_DEPENDENCIA')")
@@ -35,11 +39,14 @@ public class ArticuloController {
             @RequestParam(required = false) Integer categoriaId,
             @RequestParam(required = false) Integer bodegaId,
             @RequestParam(required = false, defaultValue = "false") Boolean incluirInactivos,
+            @RequestParam(required = false) String estadoStock,
+            @RequestParam(required = false) String ordenStock,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
         return ResponseEntity.ok(ApiResponse.ok(
-                articuloService.listar(q, categoriaId, bodegaId, incluirInactivos, page, size)
+                articuloService.listar(q, categoriaId, bodegaId, incluirInactivos,
+                                       estadoStock, ordenStock, page, size)
         ));
     }
 

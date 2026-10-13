@@ -2,7 +2,7 @@
 -- MÓDULO 7: TRAZABILIDAD SANITARIA (NT 226 y NT 247)
 -- Sistema de Gestión Integral de Bodega - DSM Santa Cruz
 -- Cubre: RF-067 a RF-074, RN-013
---
+
 -- Flujo:
 --   1. ISP emite una alerta sobre un lote específico
 --   2. La Encargada NT 226 bloquea el lote en todo el sistema
@@ -15,10 +15,10 @@
 -- ============================================================
 CREATE TABLE bloqueos_sanitarios (
     id                       BIGSERIAL    PRIMARY KEY,
-    
+
     -- Correlativo
     numero_bloqueo           VARCHAR(30)  NOT NULL UNIQUE,   -- ej: "BLQ-2026-0001"
-    
+
     -- Lote afectado
     lote_id                  BIGINT       NOT NULL REFERENCES lotes(id),
     articulo_id              BIGINT       NOT NULL REFERENCES maestro_articulos(id),
@@ -27,41 +27,41 @@ CREATE TABLE bloqueos_sanitarios (
     sku                      VARCHAR(50)  NOT NULL,          -- snapshot
     fecha_vencimiento        DATE,                           -- snapshot
     registro_isp             VARCHAR(50),                    -- snapshot
-    
+
     -- Alerta ISP (RF-069)
     tipo_alerta              VARCHAR(30)  NOT NULL,
     -- ALERTA_ISP | RETIRO_MERCADO | DEFECTO_FABRICACION | CONTAMINACION | OTRO
     numero_oficio_isp        VARCHAR(50),                    -- N° oficio ISP
     fecha_alerta             DATE         NOT NULL,
     descripcion_alerta       TEXT,
-    
+
     -- Justificación del bloqueo (RF-069)
     justificacion            TEXT         NOT NULL,
-    
+
     -- Quién bloqueó
     bloqueado_por_rut        VARCHAR(12)  NOT NULL,
     bloqueado_por_nombre     VARCHAR(150) NOT NULL,
     fecha_bloqueo            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+
     -- Cantidad afectada
     stock_afectado           INTEGER      NOT NULL DEFAULT 0, -- unidades bloqueadas
     bodegas_afectadas        INTEGER      NOT NULL DEFAULT 0, -- cuántas bodegas
-    
+
     -- Estado del bloqueo
     estado                   VARCHAR(20)  NOT NULL DEFAULT 'ACTIVO',
     -- ACTIVO | LEVANTADO | PARCIAL
-    
+
     -- Levantamiento del bloqueo (RF-069)
     levantado_por_rut        VARCHAR(12),
     levantado_por_nombre     VARCHAR(150),
     fecha_levantamiento      TIMESTAMP,
     motivo_levantamiento     TEXT,
-    
+
     -- Control
     activo                   BOOLEAN      NOT NULL DEFAULT TRUE,
     fecha_creacion           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT chk_tipo_alerta CHECK (tipo_alerta IN ('ALERTA_ISP', 'RETIRO_MERCADO', 'DEFECTO_FABRICACION', 'CONTAMINACION', 'OTRO')),
     CONSTRAINT chk_estado_bloqueo CHECK (estado IN ('ACTIVO', 'LEVANTADO', 'PARCIAL'))
 );
@@ -85,17 +85,17 @@ CREATE TABLE bloqueo_bodegas (
     bodega_id                INTEGER      NOT NULL REFERENCES bodegas(id),
     stock_id                 BIGINT       REFERENCES stock_por_bodega(id),
     stock_lote_id            BIGINT       REFERENCES stock_lotes(id),
-    
+
     -- Cantidad bloqueada en esta bodega
     cantidad_bloqueada       INTEGER      NOT NULL DEFAULT 0,
-    
+
     -- Estado del bloqueo en esta bodega
     estado                   VARCHAR(20)  NOT NULL DEFAULT 'BLOQUEADO',
     -- BLOQUEADO | DESBLOQUEADO
-    
+
     fecha_creacion           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT chk_estado_bloqueo_bodega CHECK (estado IN ('BLOQUEADO', 'DESBLOQUEADO'))
 );
 
@@ -111,14 +111,14 @@ COMMENT ON TABLE bloqueo_bodegas IS
 -- ============================================================
 CREATE TABLE trazabilidad_dm (
     id                       BIGSERIAL    PRIMARY KEY,
-    
+
     -- Vinculación
     articulo_id              BIGINT       NOT NULL REFERENCES maestro_articulos(id),
     lote_id                  BIGINT       REFERENCES lotes(id),
     stock_id                 BIGINT       REFERENCES stock_por_bodega(id),
     recepcion_detalle_id     BIGINT       REFERENCES recepcion_detalle(id),
     despacho_detalle_id      BIGINT       REFERENCES despacho_detalle(id),
-    
+
     -- Datos NT 226 (RF-067)
     nombre_producto          VARCHAR(200) NOT NULL,
     rut_proveedor            VARCHAR(12),
@@ -129,34 +129,34 @@ CREATE TABLE trazabilidad_dm (
     numero_lote              VARCHAR(50),
     numero_serie             VARCHAR(50),
     fecha_vencimiento        DATE,
-    
+
     -- Datos NT 247 (RF-068)
     estado_dm                VARCHAR(50),                    -- NUEVO | USADO | VENCIDO | DAÑADO
     numero_registro_sanitario VARCHAR(50),
     forma_adquisicion        VARCHAR(50),                    -- Cenabast | Mercado Público | etc.
     fecha_recepcion_conforme DATE,
     numero_inventario        VARCHAR(50),
-    
+
     -- Datos de paciente (solo para implantables) - RF-068
     paciente_run             VARCHAR(12),
     paciente_nombre          VARCHAR(150),
     fecha_implantacion       DATE,
     profesional_implantador  VARCHAR(150),
     procedimiento            VARCHAR(255),
-    
+
     -- Estado en el sistema
     estado                   VARCHAR(30)  NOT NULL DEFAULT 'EN_BODEGA',
     -- EN_BODEGA | DESPACHADO | IMPLANTADO | VENCIDO | MERMA | BLOQUEADO
-    
+
     observaciones            TEXT,
-    
+
     -- Control
     activo                   BOOLEAN      NOT NULL DEFAULT TRUE,
     fecha_creacion           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     creado_por               VARCHAR(12),
     actualizado_por          VARCHAR(12),
-    
+
     CONSTRAINT chk_estado_dm CHECK (estado IN ('EN_BODEGA', 'DESPACHADO', 'IMPLANTADO', 'VENCIDO', 'MERMA', 'BLOQUEADO'))
 );
 
@@ -240,6 +240,7 @@ COMMENT ON VIEW v_lotes_bloqueados IS
     'Lotes actualmente bloqueados por alerta ISP (RF-070)';
 
 -- Vista: dispositivos médicos con trazabilidad completa
+-- ⚡ CORREGIDO: t.registro_isp → t.numero_registro_sanitario AS registro_isp
 CREATE OR REPLACE VIEW v_trazabilidad_completa AS
 SELECT 
     t.id,
@@ -250,7 +251,7 @@ SELECT
     t.nombre_proveedor,
     t.numero_factura,
     t.numero_guia,
-    t.registro_isp,
+    t.numero_registro_sanitario AS registro_isp,   -- ⚡ CORREGIDO
     t.estado_dm,
     t.forma_adquisicion,
     t.fecha_recepcion_conforme,
@@ -287,7 +288,7 @@ FROM (
         td.nombre_producto,
         td.numero_lote,
         td.numero_serie,
-        td.registro_sanitario AS registro_isp,
+        td.numero_registro_sanitario AS registro_isp,   -- ⚡ CORREGIDO también aquí
         td.estado_dm,
         td.fecha_recepcion_conforme,
         (SELECT b.nombre FROM stock_por_bodega sb 

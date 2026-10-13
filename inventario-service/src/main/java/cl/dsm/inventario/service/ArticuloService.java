@@ -6,19 +6,20 @@ import cl.dsm.inventario.dto.PageResponse;
 import cl.dsm.inventario.entity.Articulo;
 import cl.dsm.inventario.entity.Bodega;
 import cl.dsm.inventario.entity.Categoria;
+import cl.dsm.inventario.entity.StockLote;
 import cl.dsm.inventario.entity.StockPorBodega;
 import cl.dsm.inventario.exception.BusinessException;
 import cl.dsm.inventario.exception.ResourceNotFoundException;
 import cl.dsm.inventario.repository.ArticuloRepository;
 import cl.dsm.inventario.repository.BodegaRepository;
 import cl.dsm.inventario.repository.CategoriaRepository;
+import cl.dsm.inventario.repository.StockLoteRepository;
 import cl.dsm.inventario.repository.StockPorBodegaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,24 +34,34 @@ public class ArticuloService {
     private final CategoriaRepository categoriaRepo;
     private final BodegaRepository bodegaRepo;
     private final StockPorBodegaRepository stockRepo;
+    private final StockLoteRepository stockLoteRepo;
 
     // ============================================================
     // LISTAR CON PAGINACIÓN Y FILTROS
-    // ⚡ Ahora acepta filtro por bodega (se envía al backend)
+    //
+    // ⚡ NUEVO: acepta estadoStock y ordenStock para filtrar y
+    //    ordenar en el backend (antes de paginar).
+    //    El ordenamiento por nombre ya no se fuerza aquí porque
+    //    el repositorio lo maneja según ordenStock.
     // ============================================================
     @Transactional(readOnly = true)
     public PageResponse<ArticuloResponse> listar(
             String q, Integer categoriaId, Integer bodegaId,
             Boolean incluirInactivos,
+            String estadoStock,
+            String ordenStock,
             int page, int size) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("nombreTecnico").ascending());
+        // ⚡ Sin Sort aquí: el ORDER BY lo hace el JPQL según ordenStock
+        Pageable pageable = PageRequest.of(page, size);
 
         Page<Articulo> pagina = articuloRepo.buscar(
                 q != null ? q.trim() : "",
                 categoriaId,
                 bodegaId,
                 incluirInactivos != null && incluirInactivos,
+                estadoStock,
+                ordenStock,
                 pageable);
 
         List<ArticuloResponse> responses = pagina.getContent().stream()
@@ -265,6 +276,10 @@ public class ArticuloService {
     // HELPERS
     // ============================================================
 
+    /**
+     * Convierte un Articulo a DTO, incluyendo la información de lotes
+     * para cada stock (necesario para FEFO y trazabilidad).
+     */
     private ArticuloResponse toResponse(Articulo a) {
         List<StockPorBodega> stocks = stockRepo.findByArticuloIdAndActivoTrue(a.getId());
 
@@ -272,7 +287,30 @@ public class ArticuloService {
                 .mapToInt(StockPorBodega::getStockActual)
                 .sum();
 
-        return ArticuloResponse.from(a, stocks, stockTotal);
+        ArticuloResponse response = ArticuloResponse.from(a, stocks, stockTotal);
+
+        // ⚡ Enriquecer cada StockBodegaDTO con la información del lote
+        if (response.getStocks() != null && !response.getStocks().isEmpty()) {
+            for (ArticuloResponse.StockBodegaDTO stockDTO : response.getStocks()) {
+                try {
+                    List<StockLote> stockLotes = stockLoteRepo.findByStockId(stockDTO.getId());
+
+                    for (StockLote sl : stockLotes) {
+                        if (sl.getCantidad() != null && sl.getCantidad() > 0 && sl.getLote() != null) {
+                            stockDTO.setLoteId(sl.getLote().getId());
+                            stockDTO.setNumeroLote(sl.getLote().getNumeroLote());
+                            stockDTO.setFechaVencimiento(sl.getLote().getFechaVencimiento());
+                            stockDTO.setBloqueado(sl.getLote().getBloqueado());
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Error cargando lote para stock {}: {}", stockDTO.getId(), e.getMessage());
+                }
+            }
+        }
+
+        return response;
     }
 
     private String generarSku(String categoriaCodigo) {

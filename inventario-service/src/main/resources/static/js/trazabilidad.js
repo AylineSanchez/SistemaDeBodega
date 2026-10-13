@@ -13,7 +13,9 @@ const usuario = window.getUsuario();
 let state = {
     tabActiva: 'bloqueo',
     loteActual: null,
-    lotesResultado: [],
+    productoActual: null,
+    lotesDisponibles: [],
+    lotesAgrupados: [],
     bloqueos: {
         page: 0, size: 20, totalPages: 0, totalElements: 0,
         q: '', estado: ''
@@ -25,13 +27,32 @@ let state = {
 };
 
 // ============================================================
+// HELPERS DE FECHA (ZONA HORARIA LOCAL)
+// ============================================================
+
+/**
+ * Devuelve la fecha actual en formato YYYY-MM-DD usando
+ * la zona horaria LOCAL del navegador (no UTC).
+ * 
+ * ⚠️ NO usar new Date().toISOString() porque convierte a UTC
+ * y en Chile (UTC-3/-4) puede devolver el día siguiente.
+ */
+function getFechaLocalISO() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// ============================================================
 // INICIALIZACIÓN
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('fechaAlerta').value = hoy;
-    
-    configurarBuscadorLotes();
+document.addEventListener('DOMContentLoaded', async () => {
+    // ⚡ FIX: usar fecha local, no UTC
+    document.getElementById('fechaAlerta').value = getFechaLocalISO();
+
+    await cargarLotesDisponibles();
     configurarFiltrosBloqueos();
     configurarFiltrosTrazabilidad();
 });
@@ -41,173 +62,213 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 function cambiarTab(tab) {
     state.tabActiva = tab;
-    
+
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-    
+
     document.getElementById('contenidoBloqueo').style.display = tab === 'bloqueo' ? 'block' : 'none';
     document.getElementById('contenidoBloqueados').style.display = tab === 'bloqueados' ? 'block' : 'none';
     document.getElementById('contenidoTrazabilidad').style.display = tab === 'trazabilidad' ? 'block' : 'none';
-    
+
     if (tab === 'bloqueados') cargarBloqueos();
     if (tab === 'trazabilidad') cargarTrazabilidad();
 }
 
 // ============================================================
-// BUSCADOR DE LOTES
+// CARGA DE LOTES DISPONIBLES (AGRUPADOS POR N° LOTE)
 // ============================================================
-let searchTimeout = null;
+async function cargarLotesDisponibles() {
+    const select = document.getElementById('loteSelect');
+    select.innerHTML = '<option value="">Cargando lotes...</option>';
 
-function configurarBuscadorLotes() {
-    const input = document.getElementById('loteSearch');
-    
-    input.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const q = e.target.value.trim();
-        
-        if (q.length < 2) {
-            document.getElementById('loteSuggestions').classList.remove('active');
-            return;
-        }
-        
-        searchTimeout = setTimeout(async () => {
-            await buscarLotes(q);
-        }, 300);
-    });
-    
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.form-group')) {
-            document.getElementById('loteSuggestions')?.classList.remove('active');
-        }
-    });
-}
-
-async function buscarLotes(q) {
     try {
-        // Buscar en artículos y filtrar por lotes
-        const res = await fetch(`${API}/articulos?q=${encodeURIComponent(q)}&size=20`, {
+        const resArt = await fetch(`${API}/articulos?size=5000&incluirInactivos=false`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await res.json();
-        
-        if (!data.success) return;
-        
-        // Recopilar lotes de los artículos
-        const lotes = [];
-        for (const art of data.data.content) {
-            if (art.requiereLote) {
-                try {
-                    const resLotes = await fetch(`${API}/articulos/${art.id}/stocks`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+        const dataArt = await resArt.json();
+
+        if (!dataArt.success) {
+            select.innerHTML = '<option value="">Error al cargar artículos</option>';
+            return;
+        }
+
+        const articulosConLote = dataArt.data.content.filter(a => a.requiereLote);
+
+        const todosLosLotes = [];
+        for (const art of articulosConLote) {
+            try {
+                const resStock = await fetch(`${API}/articulos/${art.id}/stocks`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const dataStock = await resStock.json();
+
+                if (dataStock.success && dataStock.data) {
+                    dataStock.data.forEach(s => {
+                        if (s.numeroLote && !s.bloqueado) {
+                            todosLosLotes.push({
+                                loteId: s.loteId,
+                                numeroLote: s.numeroLote,
+                                sku: art.sku,
+                                nombreProducto: art.nombreTecnico,
+                                fechaVencimiento: s.fechaVencimiento,
+                                stockActual: s.stockActual,
+                                bodegaCodigo: s.bodegaCodigo,
+                                bodegaNombre: s.bodegaNombre,
+                                bloqueado: s.bloqueado || false,
+                                articuloId: art.id,
+                                unidadMedida: art.unidadMedidaBase
+                            });
+                        }
                     });
-                    const dataLotes = await resLotes.json();
-                    
-                    if (dataLotes.success && dataLotes.data) {
-                        // Aquí tenemos los stocks, pero necesitamos los lotes
-                        // Por ahora, un mock del lote con info del artículo
-                        dataLotes.data.forEach(s => {
-                            if (s.numeroLote) {
-                                lotes.push({
-                                    loteId: s.loteId,
-                                    numeroLote: s.numeroLote,
-                                    sku: art.sku,
-                                    nombreProducto: art.nombreTecnico,
-                                    fechaVencimiento: s.fechaVencimiento,
-                                    stockActual: s.stockActual,
-                                    bodegaCodigo: s.bodegaCodigo,
-                                    bloqueado: s.bloqueado || false
-                                });
-                            }
-                        });
-                    }
-                } catch (e) { /* skip */ }
+                }
+            } catch (e) {
+                console.warn(`Error cargando lotes para artículo ${art.id}:`, e);
             }
         }
-        
-        state.lotesResultado = lotes;
-        renderizarSugerenciasLotes(lotes);
-        
+
+        state.lotesDisponibles = todosLosLotes;
+
+        // ⚡ Agrupar por numeroLote
+        const mapa = new Map();
+        todosLosLotes.forEach(l => {
+            const key = l.numeroLote;
+            if (!mapa.has(key)) {
+                mapa.set(key, {
+                    numeroLote: key,
+                    productos: []
+                });
+            }
+            mapa.get(key).productos.push(l);
+        });
+
+        state.lotesAgrupados = Array.from(mapa.values());
+
+        if (state.lotesAgrupados.length === 0) {
+            select.innerHTML = '<option value="">No hay lotes disponibles</option>';
+        } else {
+            select.innerHTML = '<option value="">Seleccione un lote...</option>' +
+                state.lotesAgrupados.map((l, i) => {
+                    const count = l.productos.length;
+                    const label = count > 1
+                        ? `Lote ${l.numeroLote} (${count} productos)`
+                        : `Lote ${l.numeroLote}`;
+                    return `<option value="${i}">${label}</option>`;
+                }).join('');
+        }
+
+        select.addEventListener('change', (e) => {
+            const idx = e.target.value;
+            if (idx === '') {
+                limpiarSeleccionLote();
+                return;
+            }
+            seleccionarLote(parseInt(idx));
+        });
+
     } catch (e) {
-        console.error(e);
+        console.error('Error cargando lotes:', e);
+        select.innerHTML = '<option value="">Error de conexión</option>';
     }
 }
 
-function renderizarSugerenciasLotes(lotes) {
-    const container = document.getElementById('loteSuggestions');
-    
-    if (lotes.length === 0) {
-        container.innerHTML = `
-            <div class="producto-option" style="color:#95a5a6;">
-                No se encontraron lotes
-            </div>
-        `;
-    } else {
-        container.innerHTML = lotes.map((l, i) => `
-            <div class="producto-option" onclick="seleccionarLote(${i})">
-                <div>
-                    <strong>${l.numeroLote}</strong> — ${escapeHtml(l.nombreProducto)}
-                    ${l.bloqueado ? '<span style="color:#e74c3c;">🔴 BLOQUEADO</span>' : ''}
-                </div>
-                <div style="font-size:0.8em;color:#7f8c8d;margin-top:3px;">
-                    ${l.sku} · ${l.bodegaCodigo} · Vence: ${formatFecha(l.fechaVencimiento)} · Stock: ${l.stockActual}
-                </div>
-            </div>
-        `).join('');
-    }
-    
-    container.classList.add('active');
+function limpiarSeleccionLote() {
+    state.loteActual = null;
+    state.productoActual = null;
+
+    document.getElementById('productoSelect').innerHTML = '<option value="">Seleccione un lote primero</option>';
+    document.getElementById('productoSelect').disabled = true;
+    document.getElementById('vencimientoLote').value = '';
+    document.getElementById('stockLote').value = '';
 }
 
+/**
+ * ⚡ Al seleccionar un lote, carga sus productos en el segundo select.
+ */
 function seleccionarLote(idx) {
-    const lote = state.lotesResultado[idx];
-    if (!lote) return;
-    
-    state.loteActual = lote;
-    
-    document.getElementById('loteSuggestions').classList.remove('active');
-    document.getElementById('loteSearch').value = lote.numeroLote;
-    document.getElementById('productoAsociado').value = lote.nombreProducto;
-    document.getElementById('vencimientoLote').value = formatFecha(lote.fechaVencimiento);
-    document.getElementById('stockLote').value = lote.stockActual + ' unidades';
+    const loteAgrupado = state.lotesAgrupados[idx];
+    if (!loteAgrupado) return;
+
+    state.loteActual = loteAgrupado;
+    state.productoActual = null;
+
+    const selectProducto = document.getElementById('productoSelect');
+
+    selectProducto.innerHTML = '<option value="">Seleccione un producto...</option>' +
+        loteAgrupado.productos.map((p, i) => {
+            const bodegaInfo = p.bodegaCodigo ? ` - ${p.bodegaCodigo}` : '';
+            return `<option value="${i}">${p.nombreProducto} (${p.sku})${bodegaInfo}</option>`;
+        }).join('');
+
+    selectProducto.disabled = false;
+
+    document.getElementById('vencimientoLote').value = '';
+    document.getElementById('stockLote').value = '';
+
+    selectProducto.onchange = (e) => {
+        const prodIdx = e.target.value;
+        if (prodIdx === '') {
+            state.productoActual = null;
+            document.getElementById('vencimientoLote').value = '';
+            document.getElementById('stockLote').value = '';
+            return;
+        }
+        seleccionarProducto(parseInt(prodIdx));
+    };
+}
+
+/**
+ * ⚡ Al seleccionar un producto, autocompleta vencimiento y stock.
+ */
+function seleccionarProducto(idx) {
+    if (!state.loteActual) return;
+
+    const producto = state.loteActual.productos[idx];
+    if (!producto) return;
+
+    state.productoActual = producto;
+
+    document.getElementById('vencimientoLote').value = formatFecha(producto.fechaVencimiento);
+    document.getElementById('stockLote').value = producto.stockActual + ' ' +
+        (producto.unidadMedida ? formatUnidad(producto.unidadMedida) : 'unidades');
 }
 
 // ============================================================
 // CREAR BLOQUEO
 // ============================================================
 async function crearBloqueo() {
-    if (!state.loteActual) {
-        Toast.warning('Seleccione un lote del buscador', 'Lote requerido');
+    if (!state.productoActual) {
+        Toast.warning('Seleccione un lote y un producto', 'Datos incompletos');
         return;
     }
-    
+
     const tipoAlerta = document.getElementById('tipoAlerta').value;
     const fechaAlerta = document.getElementById('fechaAlerta').value;
     const justificacion = document.getElementById('justificacion').value.trim();
-    
+
     if (!fechaAlerta) {
         Toast.warning('Ingrese la fecha de la alerta', 'Campo requerido');
         return;
     }
-    
+
     if (!justificacion || justificacion.length < 10) {
         Toast.warning('La justificación debe tener al menos 10 caracteres', 'Justificación requerida');
         return;
     }
-    
-    if (state.loteActual.bloqueado) {
+
+    if (state.productoActual.bloqueado) {
         Toast.error('Este lote ya está bloqueado', 'Lote bloqueado');
         return;
     }
-    
+
     const payload = {
-        loteId: state.loteActual.loteId,
+        loteId: state.productoActual.loteId,
         tipoAlerta,
         numeroOficioIsp: document.getElementById('numeroOficioIsp').value.trim() || null,
         fechaAlerta,
         descripcionAlerta: document.getElementById('descripcionAlerta').value.trim() || null,
         justificacion
     };
-    
+
     try {
         const res = await fetch(`${API}/trazabilidad/bloqueos`, {
             method: 'POST',
@@ -217,22 +278,23 @@ async function crearBloqueo() {
             },
             body: JSON.stringify(payload)
         });
-        
+
         const data = await res.json();
-        
+
         if (!res.ok || !data.success) {
             Toast.error(data.message || 'Error al crear bloqueo', 'Error');
             return;
         }
-        
+
         Toast.success(
-            `Lote ${state.loteActual.numeroLote} bloqueado. ${data.data.stockAfectado} unidades afectadas.`,
+            `Lote ${state.productoActual.numeroLote} bloqueado. ${data.data.stockAfectado} unidades afectadas.`,
             '✓ Bloqueo creado'
         );
-        
+
         limpiarFormularioBloqueo();
+        await cargarLotesDisponibles();
         cambiarTab('bloqueados');
-        
+
     } catch (e) {
         console.error(e);
         Toast.error('Error de conexión', 'Error');
@@ -240,17 +302,20 @@ async function crearBloqueo() {
 }
 
 function limpiarFormularioBloqueo() {
-    document.getElementById('loteSearch').value = '';
-    document.getElementById('productoAsociado').value = '';
+    document.getElementById('loteSelect').value = '';
+    document.getElementById('productoSelect').innerHTML = '<option value="">Seleccione un lote primero</option>';
+    document.getElementById('productoSelect').disabled = true;
     document.getElementById('vencimientoLote').value = '';
     document.getElementById('stockLote').value = '';
     document.getElementById('tipoAlerta').value = 'ALERTA_ISP';
     document.getElementById('numeroOficioIsp').value = '';
-    document.getElementById('fechaAlerta').value = new Date().toISOString().split('T')[0];
+    // ⚡ FIX: usar fecha local
+    document.getElementById('fechaAlerta').value = getFechaLocalISO();
     document.getElementById('descripcionAlerta').value = '';
     document.getElementById('justificacion').value = '';
-    
+
     state.loteActual = null;
+    state.productoActual = null;
 }
 
 // ============================================================
@@ -262,7 +327,7 @@ function configurarFiltrosBloqueos() {
         state.bloqueos.page = 0;
         cargarBloqueos();
     }, 400));
-    
+
     document.getElementById('estadoBloqueoFilter')?.addEventListener('change', (e) => {
         state.bloqueos.estado = e.target.value;
         state.bloqueos.page = 0;
@@ -279,20 +344,20 @@ async function cargarBloqueos() {
         });
         if (state.bloqueos.q) params.append('q', state.bloqueos.q);
         if (state.bloqueos.estado) params.append('estado', state.bloqueos.estado);
-        
+
         const res = await fetch(`${API}/trazabilidad/bloqueos?${params}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        
+
         if (!data.success) return;
-        
+
         state.bloqueos.totalPages = data.data.totalPages;
         state.bloqueos.totalElements = data.data.totalElements;
-        
+
         renderizarBloqueos(data.data.content);
         renderizarPaginacionBloqueos();
-        
+
     } catch (e) {
         console.error(e);
     } finally {
@@ -302,7 +367,7 @@ async function cargarBloqueos() {
 
 function renderizarBloqueos(bloqueos) {
     const container = document.getElementById('listaBloqueos');
-    
+
     if (!bloqueos || bloqueos.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
@@ -313,7 +378,7 @@ function renderizarBloqueos(bloqueos) {
         `;
         return;
     }
-    
+
     container.innerHTML = bloqueos.map(b => `
         <div class="blocked-item ${b.estado === 'LEVANTADO' ? 'desbloqueado' : ''}">
             <div class="blocked-info">
@@ -357,28 +422,28 @@ function formatTipoAlerta(tipo) {
 function renderizarPaginacionBloqueos() {
     const info = document.getElementById('bloqueosInfo');
     const botones = document.getElementById('bloqueosPagination');
-    
+
     const page = state.bloqueos.page;
     const size = state.bloqueos.size;
     const total = state.bloqueos.totalElements;
-    
+
     const inicio = total === 0 ? 0 : page * size + 1;
     const fin = Math.min((page + 1) * size, total);
     info.textContent = `Mostrando ${inicio}-${fin} de ${total} bloqueos`;
-    
+
     let html = '';
     html += `<button ${page === 0 ? 'disabled' : ''} onclick="cambiarPaginaBloqueos(${page - 1})">◀</button>`;
-    
+
     const totalPages = state.bloqueos.totalPages;
     let start = Math.max(0, page - 2);
     let end = Math.min(totalPages - 1, page + 2);
-    
+
     for (let i = start; i <= end; i++) {
         html += `<button class="${i === page ? 'active' : ''}" onclick="cambiarPaginaBloqueos(${i})">${i + 1}</button>`;
     }
-    
+
     html += `<button ${page >= totalPages - 1 ? 'disabled' : ''} onclick="cambiarPaginaBloqueos(${page + 1})">▶</button>`;
-    
+
     botones.innerHTML = html;
 }
 
@@ -397,11 +462,11 @@ async function verDetalleBloqueo(id) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        
+
         if (!data.success) return;
-        
+
         const b = data.data;
-        
+
         document.getElementById('detalleBloqueoContent').innerHTML = `
             <div class="data-card">
                 <h4 style="margin-bottom:15px;color:#2c3e50;">Información del Lote</h4>
@@ -432,7 +497,7 @@ async function verDetalleBloqueo(id) {
                     </div>
                 </div>
             </div>
-            
+
             <div class="data-card">
                 <h4 style="margin-bottom:15px;color:#2c3e50;">Información de la Alerta</h4>
                 <div class="data-grid">
@@ -459,13 +524,13 @@ async function verDetalleBloqueo(id) {
                         <span class="data-value">${formatFecha(b.fechaBloqueo)}</span>
                     </div>
                 </div>
-                
+
                 <div style="margin-top:15px;">
                     <span class="data-label">Justificación</span>
                     <p style="margin-top:5px;color:#555;line-height:1.5;">${escapeHtml(b.justificacion)}</p>
                 </div>
             </div>
-            
+
             <div class="data-card">
                 <h4 style="margin-bottom:15px;color:#2c3e50;">Bodegas Afectadas (${b.bodegasAfectadas})</h4>
                 ${b.bodegas && b.bodegas.length > 0 
@@ -495,9 +560,9 @@ async function verDetalleBloqueo(id) {
                 }
             </div>
         `;
-        
+
         document.getElementById('modalDetalleBloqueo').classList.add('active');
-        
+
     } catch (e) {
         console.error(e);
     }
@@ -526,14 +591,14 @@ function cerrarModalLevantar() {
 
 async function confirmarLevantamiento() {
     if (!bloqueoALevantar) return;
-    
+
     const motivo = document.getElementById('motivoLevantamiento').value.trim();
-    
+
     if (!motivo || motivo.length < 10) {
         Toast.warning('Ingrese un motivo (mínimo 10 caracteres)', 'Motivo requerido');
         return;
     }
-    
+
     try {
         const res = await fetch(
             `${API}/trazabilidad/bloqueos/${bloqueoALevantar}/levantar?motivo=${encodeURIComponent(motivo)}`,
@@ -542,18 +607,18 @@ async function confirmarLevantamiento() {
                 headers: { 'Authorization': `Bearer ${token}` }
             }
         );
-        
+
         const data = await res.json();
-        
+
         if (!res.ok || !data.success) {
             Toast.error(data.message || 'Error al levantar', 'Error');
             return;
         }
-        
+
         Toast.success('Bloqueo levantado. El lote puede despacharse.', '✓ Levantado');
         cerrarModalLevantar();
         cargarBloqueos();
-        
+
     } catch (e) {
         console.error(e);
         Toast.error('Error de conexión', 'Error');
@@ -569,7 +634,7 @@ function configurarFiltrosTrazabilidad() {
         state.trazabilidad.page = 0;
         cargarTrazabilidad();
     }, 400));
-    
+
     document.getElementById('estadoDmFilter')?.addEventListener('change', (e) => {
         state.trazabilidad.estadoDm = e.target.value;
         state.trazabilidad.page = 0;
@@ -586,20 +651,20 @@ async function cargarTrazabilidad() {
         });
         if (state.trazabilidad.q) params.append('q', state.trazabilidad.q);
         if (state.trazabilidad.estadoDm) params.append('estadoDm', state.trazabilidad.estadoDm);
-        
+
         const res = await fetch(`${API}/trazabilidad/dm?${params}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        
+
         if (!data.success) return;
-        
+
         state.trazabilidad.totalPages = data.data.totalPages;
         state.trazabilidad.totalElements = data.data.totalElements;
-        
+
         renderizarTrazabilidad(data.data.content);
         renderizarPaginacionTrazabilidad();
-        
+
     } catch (e) {
         console.error(e);
     } finally {
@@ -609,7 +674,7 @@ async function cargarTrazabilidad() {
 
 function renderizarTrazabilidad(items) {
     const tbody = document.getElementById('trazabilidadBody');
-    
+
     if (!items || items.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -624,7 +689,7 @@ function renderizarTrazabilidad(items) {
         `;
         return;
     }
-    
+
     tbody.innerHTML = items.map(t => `
         <tr>
             <td><span class="sku-cell">${t.sku}</span></td>
@@ -654,28 +719,28 @@ function renderizarTrazabilidad(items) {
 function renderizarPaginacionTrazabilidad() {
     const info = document.getElementById('trazabilidadInfo');
     const botones = document.getElementById('trazabilidadPagination');
-    
+
     const page = state.trazabilidad.page;
     const size = state.trazabilidad.size;
     const total = state.trazabilidad.totalElements;
-    
+
     const inicio = total === 0 ? 0 : page * size + 1;
     const fin = Math.min((page + 1) * size, total);
     info.textContent = `Mostrando ${inicio}-${fin} de ${total} registros`;
-    
+
     let html = '';
     html += `<button ${page === 0 ? 'disabled' : ''} onclick="cambiarPaginaTrazabilidad(${page - 1})">◀</button>`;
-    
+
     const totalPages = state.trazabilidad.totalPages;
     let start = Math.max(0, page - 2);
     let end = Math.min(totalPages - 1, page + 2);
-    
+
     for (let i = start; i <= end; i++) {
         html += `<button class="${i === page ? 'active' : ''}" onclick="cambiarPaginaTrazabilidad(${i})">${i + 1}</button>`;
     }
-    
+
     html += `<button ${page >= totalPages - 1 ? 'disabled' : ''} onclick="cambiarPaginaTrazabilidad(${page + 1})">▶</button>`;
-    
+
     botones.innerHTML = html;
 }
 
@@ -691,11 +756,11 @@ async function verDetalleTrazabilidad(id) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        
+
         if (!data.success) return;
-        
+
         const t = data.data;
-        
+
         alert(`Detalle de Trazabilidad:
 
 Producto: ${t.nombreProducto}
@@ -705,7 +770,7 @@ Vencimiento: ${formatFecha(t.fechaVencimiento)}
 Proveedor: ${t.nombreProveedor || '—'}
 Registro Sanitario: ${t.numeroRegistroSanitario || '—'}
 Estado: ${t.estado}`);
-        
+
     } catch (e) {
         console.error(e);
     }
@@ -713,14 +778,13 @@ Estado: ${t.estado}`);
 
 function exportarTrazabilidad() {
     Toast.info('Exportando registros de trazabilidad...', '📄 Exportar');
-    
+
     fetch(`${API}/trazabilidad/dm/exportar?filtro=${encodeURIComponent(state.trazabilidad.q || '')}`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            // Crear CSV
             const headers = ['SKU', 'Producto', 'Lote', 'Vencimiento', 'Proveedor', 'RUT', 'Reg. Sanitario', 'Estado DM'];
             const rows = data.data.map(t => [
                 t.sku,
@@ -732,20 +796,22 @@ function exportarTrazabilidad() {
                 t.numeroRegistroSanitario || '',
                 t.estadoDm || ''
             ]);
-            
-            const csv = [headers, ...rows]
-                .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
-                .join('\n');
-            
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+            let csvContent = '';
+            csvContent += headers.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `trazabilidad_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = 'trazabilidad_' + getFechaLocalISO() + '.csv';
             link.click();
             URL.revokeObjectURL(url);
-            
-            Toast.success(`${data.data.length} registros exportados`, '✓ Exportado');
+
+            Toast.success(data.data.length + ' registros exportados', '✓ Exportado');
         }
     })
     .catch(e => {
@@ -769,14 +835,27 @@ function formatFecha(fechaStr) {
     });
 }
 
+function formatUnidad(unidad) {
+    if (!unidad) return 'unidades';
+    const map = {
+        'UNIDAD': 'unidad', 'UNIDADES': 'unidades',
+        'CAJA': 'caja', 'CAJAS': 'cajas',
+        'PAQUETE': 'paquete', 'PAQUETES': 'paquetes',
+        'BOLSA': 'bolsa', 'BOLSAS': 'bolsas',
+        'FRASCO': 'frasco', 'FRASCOS': 'frascos',
+        'KILO': 'kilo', 'KILOS': 'kilos'
+    };
+    return map[unidad.toUpperCase()] || unidad.toLowerCase();
+}
+
 function escapeHtml(str) {
     if (str == null) return '';
     return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"')
+        .replace(/'/g, ',');
 }
 
 function debounce(func, wait) {

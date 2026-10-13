@@ -29,6 +29,17 @@ let state = {
     }
 };
 
+// ============================================================
+// HELPERS DE FECHA (ZONA HORARIA LOCAL)
+// ============================================================
+function getFechaLocalISO() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await cargarBodegas();
     await cargarCategorias();
@@ -82,7 +93,7 @@ async function cargarTodosLosProductos() {
 }
 
 async function inicializarFormulario() {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = getFechaLocalISO();
     document.getElementById('fechaEmision').value = hoy;
     document.getElementById('fechaRecepcion').value = hoy;
 }
@@ -411,22 +422,19 @@ function eliminarDetalle(idx) {
 }
 
 /* ============================================================
-   TOTALES
+   TOTALES (⚡ CORREGIDO: siempre automáticos)
    ============================================================ */
 function recalcularTotales() {
     const totalUnidades = state.detalles.reduce((sum, d) => sum + d.cantidadRecibida, 0);
     const totalLineas = state.detalles.length;
     const sumaLineas = state.detalles.reduce((sum, d) => sum + d.montoTotal, 0);
 
-    let montoNeto = parseFloat(document.getElementById('montoNeto').value) || 0;
-    if (montoNeto === 0 && sumaLineas > 0) {
-        montoNeto = sumaLineas;
-        document.getElementById('montoNeto').value = sumaLineas.toFixed(2);
-    }
-
+    // ⚡ Monto Neto SIEMPRE es la suma de las líneas (no editable)
+    const montoNeto = sumaLineas;
     const iva = montoNeto * 0.19;
     const total = montoNeto + iva;
 
+    document.getElementById('montoNeto').value = montoNeto.toFixed(2);
     document.getElementById('montoIva').value = iva.toFixed(2);
     document.getElementById('montoTotal').value = total.toFixed(2);
 
@@ -550,11 +558,6 @@ async function guardarRecepcion(confirmar) {
             Toast.success('Recepción confirmada. Stock actualizado.', '✓ Confirmada');
 
             const detallesResp = dataConf.data?.detalles || [];
-            console.log(`📥 [RECEPCION] ${detallesResp.length} detalles en la respuesta`);
-            console.log('📥 [RECEPCION] Detalles con sus QRs:');
-            detallesResp.forEach((d, i) => {
-                console.log(`   ${i + 1}. ID: ${d.id} | SKU: ${d.sku} | Bodega: ${d.bodegaCodigo || '❌ null'} | Lote: ${d.numeroLote || '—'} | QR: ${d.codigoQr || '❌ SIN QR'}`);
-            });
 
             const qrs = detallesResp
                 .filter(d => d.codigoQr)
@@ -571,8 +574,6 @@ async function guardarRecepcion(confirmar) {
                     unidadMedida: d.unidadMedidaBase
                 }));
 
-            console.log(`📥 [RECEPCION] ${qrs.length} QRs listos de ${detallesResp.length} detalles`);
-
             if (qrs.length > 0) {
                 const datosQR = {
                     nombreArticulo: `Recepción ${recepcionCreada.numeroRecepcion}`,
@@ -584,7 +585,6 @@ async function guardarRecepcion(confirmar) {
                     window.open('/qr-print.html', '_blank');
                 }, 800);
             } else if (detallesResp.length > 0) {
-                console.warn('⚠️ No vinieron QRs, intentando fallback...');
                 setTimeout(() => reimprimirQrs(recepcionCreada.id), 500);
             }
         }
@@ -602,7 +602,7 @@ async function guardarRecepcion(confirmar) {
 }
 
 function limpiarFormulario() {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = getFechaLocalISO();
 
     document.getElementById('tipoDocumento').value = '';
     document.getElementById('numeroDocumento').value = '';
@@ -615,9 +615,9 @@ function limpiarFormulario() {
     document.getElementById('tipoProveedor').value = '';
     document.getElementById('fechaEmision').value = hoy;
     document.getElementById('fechaRecepcion').value = hoy;
-    document.getElementById('montoNeto').value = 0;
-    document.getElementById('montoIva').value = 0;
-    document.getElementById('montoTotal').value = 0;
+    document.getElementById('montoNeto').value = '0.00';
+    document.getElementById('montoIva').value = '0.00';
+    document.getElementById('montoTotal').value = '0.00';
     document.getElementById('observaciones').value = '';
 
     state.detalles = [];
@@ -983,9 +983,6 @@ function anularRecepcion(id) {
     );
 }
 
-/**
- * ⚡ Reimprime los QRs de una recepción confirmada.
- */
 async function reimprimirQrs(recepcionId) {
     try {
         mostrarLoading(true);
